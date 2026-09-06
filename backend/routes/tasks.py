@@ -360,6 +360,7 @@ class TaskCreate(BaseModel):
     partner_url: Optional[str] = None         # partner API endpoint (partner quest)
     partner_ref_id: Optional[str] = None      # your partner/referral id
     partner_method: Optional[str] = None      # 'GET' | 'POST' (default GET)
+    partner_api_key: Optional[str] = None     # sent as `x-api-key` header (partner quest)
     instructions: Optional[str] = None        # free-text steps shown to the user
     reward_description: Optional[str] = None   # free-text describing the reward (shown next to the skin)
     reward_resources: Optional[Dict[str, float]] = None  # {resource_type: amount}
@@ -604,9 +605,12 @@ def create_tasks_router(db, get_current_user, get_admin_user):
             "internal_user_id": uid,
             "ref_id": task.get("partner_ref_id") or "",
         }
+        headers = {"User-Agent": "GRAMCity-QuestVerifier/1.0"}
+        api_key = (task.get("partner_api_key") or "").strip()
+        if api_key:
+            headers["x-api-key"] = api_key
         try:
-            async with httpx.AsyncClient(timeout=20, follow_redirects=True,
-                                         headers={"User-Agent": "GRAMCity-QuestVerifier/1.0"}) as client:
+            async with httpx.AsyncClient(timeout=20, follow_redirects=True, headers=headers) as client:
                 if method == "POST":
                     resp = await client.post(url, json=payload, params=payload)
                 else:
@@ -866,6 +870,7 @@ def create_tasks_router(db, get_current_user, get_admin_user):
             t.pop("partner_url", None)
             t.pop("partner_ref_id", None)
             t.pop("partner_method", None)
+            t.pop("partner_api_key", None)
             status = "pending"
             if tid in completed_ids:
                 status = "completed"
@@ -1198,7 +1203,7 @@ def create_tasks_router(db, get_current_user, get_admin_user):
 
         # ── Partner / local quest validation + normalization ────────────────
         quest_kind = None
-        partner_url = partner_ref_id = partner_method = None
+        partner_url = partner_ref_id = partner_method = partner_api_key = None
         reward_resources = None
         reward_skins = None
         if data.action_type in QUEST_TYPES:
@@ -1210,6 +1215,7 @@ def create_tasks_router(db, get_current_user, get_admin_user):
                 if not partner_url.lower().startswith(("http://", "https://")):
                     raise HTTPException(status_code=400, detail="partner_url must be a valid http(s) URL")
                 partner_ref_id = (data.partner_ref_id or "").strip() or None
+                partner_api_key = (data.partner_api_key or "").strip() or None
                 partner_method = (data.partner_method or "GET").upper()
                 if partner_method not in ("GET", "POST"):
                     partner_method = "GET"
@@ -1288,6 +1294,7 @@ def create_tasks_router(db, get_current_user, get_admin_user):
             "partner_url": partner_url,
             "partner_ref_id": partner_ref_id,
             "partner_method": partner_method,
+            "partner_api_key": partner_api_key,
             "instructions": (data.instructions or None),
             "instructions_i18n": instructions_i18n,
             "reward_description": reward_desc_clean,

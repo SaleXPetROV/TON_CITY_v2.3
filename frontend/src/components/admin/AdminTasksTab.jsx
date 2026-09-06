@@ -79,7 +79,7 @@ const emptyForm = {
   title: '', reward_city: '', action_type: '', photo: '', icon: 'none', icon_url: '',
   channel_url: '', channel_id: '', target_url: '', required_referrals: '', views_rate: '',
   // Partner / local quest
-  quest_kind: 'local', partner_url: '', partner_ref_id: '', partner_method: 'GET',
+  quest_kind: 'local', partner_url: '', partner_ref_id: '', partner_method: 'GET', partner_api_key: '',
   show_to_referrals: true,   // partner quest: show to the partner's own referrals too
   instructions: '',
   reward_description: '',   // free-text describing the reward (shown next to the skin)
@@ -188,6 +188,7 @@ export default function AdminTasksTab() {
       partner_url: task.partner_url || '',
       partner_ref_id: task.partner_ref_id || '',
       partner_method: task.partner_method || 'GET',
+      partner_api_key: task.partner_api_key || '',
       show_to_referrals: task.show_to_referrals !== false,
       instructions: task.instructions || '',
       reward_description: task.reward_description || '',
@@ -238,6 +239,7 @@ export default function AdminTasksTab() {
         payload.partner_url = url;
         payload.partner_ref_id = (form.partner_ref_id || '').trim() || null;
         payload.partner_method = form.partner_method || 'GET';
+        payload.partner_api_key = (form.partner_api_key || '').trim() || null;
       }
       payload.instructions = (form.instructions || '').trim() || null;
       payload.reward_description = (form.reward_description || '').trim() || null;
@@ -725,13 +727,13 @@ export default function AdminTasksTab() {
                       <Label className="text-xs">URL API партнёра</Label>
                       <Input value={form.partner_url} onChange={(e) => setForm(f => ({ ...f, partner_url: e.target.value }))}
                         placeholder="https://partner.example.com/api/check" className="bg-black/40 border-white/10" data-testid="quest-partner-url-input" />
-                      <p className="text-[10px] text-text-muted mt-1">При нажатии «Проверить» отправим запрос с <b>user_id</b> и <b>ref_id</b>. Ответ <b>HTTP 200</b> = квест выполнен, награда начисляется; иначе — сообщение «условия ещё не выполнены».</p>
+                      <p className="text-[10px] text-text-muted mt-1">При нажатии «Проверить» отправим запрос с <b>user_id</b> (Telegram id) и <b>ref_id</b> в параметрах; если указан API-ключ — добавим заголовок <b>x-api-key</b>. Ответ <b>HTTP 200</b> = квест выполнен, награда начисляется; иначе — сообщение «условия ещё не выполнены».</p>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <Label className="text-xs">Ваш ref_id (партнёрский ID)</Label>
+                        <Label className="text-xs">ref_id (в параметрах запроса)</Label>
                         <Input value={form.partner_ref_id} onChange={(e) => setForm(f => ({ ...f, partner_ref_id: e.target.value }))}
-                          placeholder="myref123" className="bg-black/40 border-white/10" data-testid="quest-ref-id-input" />
+                          placeholder="myref123 (необязательно)" className="bg-black/40 border-white/10" data-testid="quest-ref-id-input" />
                       </div>
                       <div>
                         <Label className="text-xs">Метод</Label>
@@ -743,6 +745,11 @@ export default function AdminTasksTab() {
                           </SelectContent>
                         </Select>
                       </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs">API-ключ партнёра (заголовок x-api-key)</Label>
+                      <Input value={form.partner_api_key} onChange={(e) => setForm(f => ({ ...f, partner_api_key: e.target.value }))}
+                        placeholder="Необязательно — если партнёр выдал ключ" className="bg-black/40 border-white/10 font-mono text-xs" data-testid="quest-api-key-input" autoComplete="off" />
                     </div>
                   </>
                 )}

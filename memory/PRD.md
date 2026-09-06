@@ -16,6 +16,8 @@ React (CRA/craco) + FastAPI (`backend/server.py`, `backend/routes/*`) + MongoDB.
 - **Ур.0 гейт**: `TonIslandPage.jsx` — при наличии бизнеса level 0 / `is_zero_business` кнопка «Купить» заменяется на disabled `zero-locked-buy` с текстом подсказки; `handleBuyClick` показывает toast. Бэкенд-гейт (423 `zero_locked`) уже существовал.
 - Тесты: `test_reports/iteration_1.json` — backend 11/11, frontend 3/3.
 
+- **Партнёрский квест — x-api-key** (`routes/tasks.py`, `AdminTasksTab.jsx`): новое необязательное поле задания `partner_api_key`; если заполнено — при «Проверить» уходит заголовок `x-api-key`. `ref_id` (в параметрах) и ключ можно использовать по отдельности или вместе. Ключ скрыт из пользовательского списка задач (`_clean_task`). Проверено через httpbin: заголовок доходит, 200 → награда.
+
 ## Заметки для prod
 После деплоя Telegram Wallet может держать старый манифест в кэше — новый URL v6 его сбрасывает. Проверить: `curl -I https://gramcity.app/api/tonconnect-icon-v3.png` → 200.
 
