@@ -361,6 +361,7 @@ class TaskCreate(BaseModel):
     partner_ref_id: Optional[str] = None      # your partner/referral id
     partner_method: Optional[str] = None      # 'GET' | 'POST' (default GET)
     partner_api_key: Optional[str] = None     # sent as `x-api-key` header (partner quest)
+    partner_user_param: Optional[str] = None  # query param name for the Telegram id (default user_id)
     instructions: Optional[str] = None        # free-text steps shown to the user
     reward_description: Optional[str] = None   # free-text describing the reward (shown next to the skin)
     reward_resources: Optional[Dict[str, float]] = None  # {resource_type: amount}
@@ -600,8 +601,9 @@ def create_tasks_router(db, get_current_user, get_admin_user):
         method = (task.get("partner_method") or "GET").upper()
         if method not in ("GET", "POST"):
             method = "GET"
+        user_param = (task.get("partner_user_param") or "user_id").strip() or "user_id"
         payload = {
-            "user_id": _user_tg_id(user_doc) or uid,
+            user_param: _user_tg_id(user_doc) or uid,
             "internal_user_id": uid,
             "ref_id": task.get("partner_ref_id") or "",
         }
@@ -609,12 +611,18 @@ def create_tasks_router(db, get_current_user, get_admin_user):
         api_key = (task.get("partner_api_key") or "").strip()
         if api_key:
             headers["x-api-key"] = api_key
+        # Keep any static query params baked into partner_url (e.g. ?task=xyz)
+        from urllib.parse import urlsplit, parse_qsl, urlunsplit
+        parts = urlsplit(url)
+        params = dict(parse_qsl(parts.query, keep_blank_values=True))
+        params.update(payload)
+        url = urlunsplit((parts.scheme, parts.netloc, parts.path, "", parts.fragment))
         try:
             async with httpx.AsyncClient(timeout=20, follow_redirects=True, headers=headers) as client:
                 if method == "POST":
-                    resp = await client.post(url, json=payload, params=payload)
+                    resp = await client.post(url, json=payload, params=params)
                 else:
-                    resp = await client.get(url, params=payload)
+                    resp = await client.get(url, params=params)
             status = resp.status_code
         except Exception as e:
             logger.warning(f"partner quest verify request failed for task {task.get('id')}: {e}")
@@ -871,6 +879,7 @@ def create_tasks_router(db, get_current_user, get_admin_user):
             t.pop("partner_ref_id", None)
             t.pop("partner_method", None)
             t.pop("partner_api_key", None)
+            t.pop("partner_user_param", None)
             status = "pending"
             if tid in completed_ids:
                 status = "completed"
@@ -1203,7 +1212,7 @@ def create_tasks_router(db, get_current_user, get_admin_user):
 
         # ── Partner / local quest validation + normalization ────────────────
         quest_kind = None
-        partner_url = partner_ref_id = partner_method = partner_api_key = None
+        partner_url = partner_ref_id = partner_method = partner_api_key = partner_user_param = None
         reward_resources = None
         reward_skins = None
         if data.action_type in QUEST_TYPES:
@@ -1216,6 +1225,9 @@ def create_tasks_router(db, get_current_user, get_admin_user):
                     raise HTTPException(status_code=400, detail="partner_url must be a valid http(s) URL")
                 partner_ref_id = (data.partner_ref_id or "").strip() or None
                 partner_api_key = (data.partner_api_key or "").strip() or None
+                partner_user_param = (data.partner_user_param or "").strip() or None
+                if partner_user_param and not partner_user_param.replace("_", "").replace("-", "").isalnum():
+                    raise HTTPException(status_code=400, detail="partner_user_param must be alphanumeric")
                 partner_method = (data.partner_method or "GET").upper()
                 if partner_method not in ("GET", "POST"):
                     partner_method = "GET"
@@ -1295,6 +1307,7 @@ def create_tasks_router(db, get_current_user, get_admin_user):
             "partner_ref_id": partner_ref_id,
             "partner_method": partner_method,
             "partner_api_key": partner_api_key,
+            "partner_user_param": partner_user_param,
             "instructions": (data.instructions or None),
             "instructions_i18n": instructions_i18n,
             "reward_description": reward_desc_clean,

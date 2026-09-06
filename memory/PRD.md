@@ -18,6 +18,8 @@ React (CRA/craco) + FastAPI (`backend/server.py`, `backend/routes/*`) + MongoDB.
 
 - **Партнёрский квест — x-api-key** (`routes/tasks.py`, `AdminTasksTab.jsx`): новое необязательное поле задания `partner_api_key`; если заполнено — при «Проверить» уходит заголовок `x-api-key`. `ref_id` (в параметрах) и ключ можно использовать по отдельности или вместе. Ключ скрыт из пользовательского списка задач (`_clean_task`). Проверено через httpbin: заголовок доходит, 200 → награда.
 
+- **Партнёрский квест — имя параметра Telegram id** (`partner_user_param`, по умолчанию `user_id`; для iTerra — `chatId`). Исправлено: статические query-параметры из `partner_url` (напр. `?task=market_trade_5`) теперь сохраняются при добавлении наших параметров (раньше httpx их затирал).
+
 ## Заметки для prod
 После деплоя Telegram Wallet может держать старый манифест в кэше — новый URL v6 его сбрасывает. Проверить: `curl -I https://gramcity.app/api/tonconnect-icon-v3.png` → 200.
 
