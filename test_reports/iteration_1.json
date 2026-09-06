@@ -1,0 +1,30 @@
+{
+  "summary": "Tested three targeted fixes: (1) TON Connect manifest v6 + icon v3 with GET/HEAD support and CORS; (2) TonIslandPage owner-avatar SmartAvatar rendering (no [object Object] broken img); (3) zero-locked buy button replacing Buy for users with Level-0 business. All 11 backend tests pass. All 3 frontend UI checks pass.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_tonconnect_manifest_v6_and_zero_locked.py",
+    "/app/test_reports/pytest/tonconnect_v6_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "TonIslandPage.jsx is 2196 lines — should be split into smaller components per <file_size> guideline (info panel, buy actions, cell handlers).",
+    "presale_gate fires before zero_business gate on backend; frontend prioritizes zero-locked-buy over presale-locked-buy correctly. Ordering is consistent with the requested UX but note backend will return presale_locked (not zero_locked) when presale is empty — this is fine because zero_locked test requires an active presale allowlist for the cell."
+  ],
+  "updated_files": ["/app/backend/tests/test_tonconnect_manifest_v6_and_zero_locked.py"],
+  "success_rate": {"backend": "100% (11/11)", "frontend": "100% (3/3)"},
+  "test_credentials": "Admin sanyanazarov212@gmail.com/Qetuyrwioo; Level-0 user testuser@example.com/Test1234!",
+  "seed_data_creation": "Backend test_zero_locked_returns_423 temporarily seeds admin_settings.presale (active=true, selected_plots=[target cell]) then restores previous document in finally block.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "TonIslandPage exposes window.__handleCellClick({x,y}) — use it to open the info panel programmatically instead of trying to click the isometric canvas. Login via API + localStorage.setItem('token', <jwt>) works to skip the login UI. Backend presale gate blocks non-admins by default (no active presale doc), so to reach the zero_locked path, seed admin_settings.presale with active=true and the target cell.",
+  "verified_scenarios": [
+    "GET/HEAD /api/tonconnect-manifest-v6.json → 200, name='GRAM CITY', iconUrl ends /api/tonconnect-icon-v3.png",
+    "Old manifest paths (v3/v4/v5/manifest.json) still 200",
+    "GET/HEAD /api/tonconnect-icon-v3.png and /api/tonconnect-icon.png → 200, image/png, ACAO:*, 512x512 PNG",
+    "POST /api/island/buy/{x}/{y} for testuser on presale-allowed cell → 423 code=zero_locked",
+    "Admin cell [12,25] info panel: SmartAvatar renders data-testid='smart-avatar-img' (or would fall back to initials 'S' on error); no img src contains [object Object]; username 'SanyaNazarov' visible",
+    "Admin free cell [12,26]: data-testid='buy-plot-btn' present, zero-locked-buy absent (no regression)",
+    "testuser@example.com free cell [12,26]: data-testid='zero-locked-buy' present and disabled; data-testid='buy-plot-btn' absent"
+  ]
+}
