@@ -290,6 +290,30 @@ NOTIF: Dict[str, Dict[str, Tuple[str, str]]] = {
         "ko": ("🎁 튜토리얼 보상", "튜토리얼 완료를 축하합니다! 보너스 잔액에 <b>{amount} TON</b>을(를) 지급했습니다."),
         "id": ("🎁 Hadiah tutorial", "Selamat telah menyelesaikan tutorial! Kami telah mengkreditkan <b>{amount} TON</b> ke saldo bonus Anda."),
     },
+    # ── Бизнес изъят за неуплату кредита ──
+    "business_seized_credit": {
+        "en": ("⚖️ Business seized for loan default", "Your business «{biz}» was seized by GRAM CITY due to an unpaid loan and put up for sale for {price} TON. The outstanding debt is repaid first from the sale; the rest goes to you."),
+        "ru": ("⚖️ Бизнес изъят за неуплату кредита", "Ваш бизнес «{biz}» изъят GRAM CITY за непогашенный кредит и выставлен на продажу за {price} TON. Из вырученной суммы сначала погашается долг, остаток поступает вам."),
+        "es": ("⚖️ Negocio embargado por impago del préstamo", "Tu negocio «{biz}» fue embargado por GRAM CITY por un préstamo impago y puesto a la venta por {price} TON. La deuda pendiente se paga primero; el resto es para ti."),
+        "zh": ("⚖️ 因贷款违约企业被没收", "您的企业«{biz}»因未偿还贷款被 GRAM CITY 没收，并以 {price} TON 挂牌出售。出售款项先偿还欠款，余额归您。"),
+        "fr": ("⚖️ Entreprise saisie pour défaut de prêt", "Votre entreprise «{biz}» a été saisie par GRAM CITY pour un prêt impayé et mise en vente pour {price} TON. La dette est d'abord remboursée ; le reste vous revient."),
+        "de": ("⚖️ Unternehmen wegen Kreditausfalls beschlagnahmt", "Dein Unternehmen «{biz}» wurde von GRAM CITY wegen eines unbezahlten Kredits beschlagnahmt und für {price} TON zum Verkauf gestellt. Die Restschuld wird zuerst getilgt; der Rest geht an dich."),
+        "ja": ("⚖️ ローン滞納によりビジネスが差し押さえられました", "あなたのビジネス «{biz}» は未払いローンのため GRAM CITY に差し押さえられ、{price} TON で売りに出されました。売却額はまず債務の返済に充てられ、残りはあなたに渡ります。"),
+        "ko": ("⚖️ 대출 미상환으로 사업이 압류됨", "당신의 사업 «{biz}»이(가) 미상환 대출로 인해 GRAM CITY에 압류되어 {price} TON에 판매 등록되었습니다. 판매 대금은 먼저 부채 상환에 쓰이고 나머지는 당신에게 지급됩니다."),
+        "id": ("⚖️ Bisnis disita karena gagal bayar pinjaman", "Bisnis «{biz}» Anda disita oleh GRAM CITY karena pinjaman belum dibayar dan dijual seharga {price} TON. Sisa utang dilunasi lebih dulu; sisanya untuk Anda."),
+    },
+    # ── Бизнес изъят: прочность держалась на 0 в течение 7 дней ──
+    "business_seized_durability": {
+        "en": ("⚖️ Business seized (durability at 0 for 7 days)", "Your business «{biz}» sat at 0 durability for 7 days and was seized by GRAM CITY, then put up for sale for {price} TON. Proceeds (minus tax) go to you."),
+        "ru": ("⚖️ Бизнес изъят (прочность 0 в течение 7 дней)", "Ваш бизнес «{biz}» простоял с нулевой прочностью 7 дней и был изъят GRAM CITY, а затем выставлен на продажу за {price} TON. Вырученные средства (за вычетом налога) поступят вам."),
+        "es": ("⚖️ Negocio embargado (durabilidad en 0 durante 7 días)", "Tu negocio «{biz}» estuvo con durabilidad 0 durante 7 días y fue embargado por GRAM CITY, luego puesto a la venta por {price} TON. Los ingresos (menos impuestos) son para ti."),
+        "zh": ("⚖️ 企业被没收（耐久度为 0 达 7 天）", "您的企业«{biz}»耐久度为 0 持续 7 天，被 GRAM CITY 没收并以 {price} TON 挂牌出售。所得款项（扣税后）归您。"),
+        "fr": ("⚖️ Entreprise saisie (durabilité à 0 pendant 7 jours)", "Votre entreprise «{biz}» est restée à 0 de durabilité pendant 7 jours et a été saisie par GRAM CITY, puis mise en vente pour {price} TON. Le produit (moins la taxe) vous revient."),
+        "de": ("⚖️ Unternehmen beschlagnahmt (Haltbarkeit 7 Tage auf 0)", "Dein Unternehmen «{biz}» stand 7 Tage bei 0 Haltbarkeit und wurde von GRAM CITY beschlagnahmt und für {price} TON zum Verkauf gestellt. Der Erlös (abzüglich Steuer) geht an dich."),
+        "ja": ("⚖️ ビジネスが差し押さえられました（耐久度0が7日間）", "あなたのビジネス «{biz}» は耐久度0のまま7日間放置され、GRAM CITY に差し押さえられて {price} TON で売りに出されました。売却額（税引後）はあなたに渡ります。"),
+        "ko": ("⚖️ 사업 압류됨 (내구도 0으로 7일)", "당신의 사업 «{biz}»이(가) 내구도 0인 상태로 7일간 방치되어 GRAM CITY에 압류되고 {price} TON에 판매 등록되었습니다. 판매 대금(세금 제외)은 당신에게 지급됩니다."),
+        "id": ("⚖️ Bisnis disita (daya tahan 0 selama 7 hari)", "Bisnis «{biz}» Anda berada pada daya tahan 0 selama 7 hari dan disita oleh GRAM CITY, lalu dijual seharga {price} TON. Hasilnya (dikurangi pajak) untuk Anda."),
+    },
 }
 
 # Короткие подписи (кнопки, единицы, ошибки).

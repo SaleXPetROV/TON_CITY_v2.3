@@ -79,7 +79,7 @@ const emptyForm = {
   title: '', reward_city: '', action_type: '', photo: '', icon: 'none', icon_url: '',
   channel_url: '', channel_id: '', target_url: '', required_referrals: '', views_rate: '',
   // Partner / local quest
-  quest_kind: 'local', partner_url: '', partner_ref_id: '', partner_method: 'GET', partner_api_key: '', partner_user_param: '', partner_check_field: '', partner_check_min: '', partner_check_field: '', partner_check_min: '',
+  quest_kind: 'local', partner_url: '', partner_ref_id: '', partner_method: 'GET', partner_api_key: '', partner_user_param: '', partner_check_field: '', partner_check_min: '', partner_completed_field: '',
   show_to_referrals: true,   // partner quest: show to the partner's own referrals too
   instructions: '',
   reward_description: '',   // free-text describing the reward (shown next to the skin)
@@ -105,6 +105,39 @@ export default function AdminTasksTab() {
   const [expanded, setExpanded] = useState({});     // taskId -> submissions[]
   const [search, setSearch] = useState({});         // taskId -> string
   const [dragIndex, setDragIndex] = useState(null);
+  // Partner-quest response preview (test before create/update)
+  const [partnerTestId, setPartnerTestId] = useState('');
+  const [partnerTesting, setPartnerTesting] = useState(false);
+  const [partnerTestResult, setPartnerTestResult] = useState(null);
+
+  const testPartnerResponse = useCallback(async () => {
+    const url = (form.partner_url || '').trim();
+    if (!/^https?:\/\//i.test(url)) { toast.error('Сначала укажите корректный URL API партнёра'); return; }
+    if (!String(partnerTestId).trim()) { toast.error('Введите тестовый telegram_id / chatId'); return; }
+    setPartnerTesting(true);
+    setPartnerTestResult(null);
+    try {
+      const cm = parseFloat(form.partner_check_min);
+      const body = {
+        partner_url: url,
+        partner_method: form.partner_method || 'GET',
+        partner_api_key: (form.partner_api_key || '').trim() || null,
+        partner_user_param: (form.partner_user_param || '').trim() || null,
+        partner_ref_id: (form.partner_ref_id || '').trim() || null,
+        partner_check_field: (form.partner_check_field || '').trim() || null,
+        partner_check_min: Number.isFinite(cm) ? cm : null,
+        partner_completed_field: (form.partner_completed_field || '').trim() || null,
+        test_user_id: String(partnerTestId).trim(),
+      };
+      const r = await axios.post(`${API}/admin/tasks/test-partner`, body, headers());
+      setPartnerTestResult(r.data);
+    } catch (e) {
+      setPartnerTestResult({ ok: false, reachable: false, verdict: false,
+        verdict_reason: e?.response?.data?.detail || e.message || 'Ошибка запроса' });
+    } finally {
+      setPartnerTesting(false);
+    }
+  }, [form, partnerTestId]);
 
   const fetchAll = useCallback(async () => {
     try {
@@ -192,8 +225,7 @@ export default function AdminTasksTab() {
       partner_user_param: task.partner_user_param || '',
       partner_check_field: task.partner_check_field || '',
       partner_check_min: (task.partner_check_min ?? '') === null ? '' : String(task.partner_check_min ?? ''),
-      partner_check_field: task.partner_check_field || '',
-      partner_check_min: (task.partner_check_min ?? '') === null ? '' : String(task.partner_check_min ?? ''),
+      partner_completed_field: task.partner_completed_field || '',
       show_to_referrals: task.show_to_referrals !== false,
       instructions: task.instructions || '',
       reward_description: task.reward_description || '',
@@ -251,11 +283,7 @@ export default function AdminTasksTab() {
           const cm = parseFloat(form.partner_check_min);
           payload.partner_check_min = Number.isFinite(cm) ? cm : null;
         }
-        payload.partner_check_field = (form.partner_check_field || '').trim() || null;
-        {
-          const cm = parseFloat(form.partner_check_min);
-          payload.partner_check_min = Number.isFinite(cm) ? cm : null;
-        }
+        payload.partner_completed_field = (form.partner_completed_field || '').trim() || null;
       }
       payload.instructions = (form.instructions || '').trim() || null;
       payload.reward_description = (form.reward_description || '').trim() || null;
@@ -790,6 +818,49 @@ export default function AdminTasksTab() {
                       Если оба поля заполнены — квест засчитывается только когда числовое значение из ответа партнёра ≥ порога
                       (напр. iTerra: <span className="font-mono">data.tradeVolume ≥ 5</span>). Пусто = достаточно ответа HTTP 200.
                     </p>
+                    <div>
+                      <Label className="text-xs">Поле-флаг «выполнено» (dot-path, булево)</Label>
+                      <Input value={form.partner_completed_field} onChange={(e) => setForm(f => ({ ...f, partner_completed_field: e.target.value }))}
+                        placeholder="напр.: completed" className="bg-black/40 border-white/10 font-mono text-xs" data-testid="quest-completed-field-input" autoComplete="off" />
+                      <p className="text-[10px] text-text-muted mt-0.5">
+                        Для заданий вида <span className="font-mono">{`{"completed": true}`}</span> (напр. five-battles). Если заполнено —
+                        квест засчитывается, когда это поле в ответе истинно. Оставьте пустым для числового порога выше.
+                      </p>
+                    </div>
+
+                    {/* Предпросмотр ответа сервера партнёра перед сохранением */}
+                    <div className="rounded-lg border border-cyber-cyan/30 bg-black/30 p-3 space-y-2" data-testid="quest-partner-test-box">
+                      <Label className="text-xs flex items-center gap-1"><Play className="w-3.5 h-3.5 text-cyber-cyan" /> Проверить ответ сервера партнёра</Label>
+                      <div className="flex items-end gap-2">
+                        <div className="flex-1">
+                          <Label className="text-[10px] text-text-muted">Тестовый telegram_id / chatId</Label>
+                          <Input value={partnerTestId} onChange={(e) => setPartnerTestId(e.target.value)}
+                            placeholder="напр.: 128668539" className="bg-black/40 border-white/10 font-mono text-xs" data-testid="quest-partner-test-id-input" />
+                        </div>
+                        <Button type="button" onClick={testPartnerResponse} disabled={partnerTesting}
+                          className="bg-cyber-cyan/20 border border-cyber-cyan/40 text-cyber-cyan hover:bg-cyber-cyan/30" data-testid="quest-partner-test-btn">
+                          {partnerTesting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Проверить'}
+                        </Button>
+                      </div>
+                      {partnerTestResult && (
+                        <div className="text-xs space-y-1" data-testid="quest-partner-test-result">
+                          <div className={partnerTestResult.verdict ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
+                            {partnerTestResult.verdict ? '✓ Задание будет засчитано' : '✗ Задание НЕ будет засчитано'}
+                          </div>
+                          <div className="text-text-muted">{partnerTestResult.verdict_reason}</div>
+                          {partnerTestResult.status != null && (
+                            <div className="text-text-muted">HTTP статус: <span className="font-mono">{partnerTestResult.status}</span></div>
+                          )}
+                          {partnerTestResult.request_url && (
+                            <div className="text-text-muted break-all">Запрос: <span className="font-mono">{partnerTestResult.request_url}</span></div>
+                          )}
+                          <div className="text-text-muted">Ответ партнёра:</div>
+                          <pre className="bg-black/60 rounded p-2 overflow-x-auto text-[10px] font-mono text-white max-h-40" data-testid="quest-partner-test-raw">
+{typeof partnerTestResult.raw_response === 'string' ? partnerTestResult.raw_response : JSON.stringify(partnerTestResult.raw_response, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
 

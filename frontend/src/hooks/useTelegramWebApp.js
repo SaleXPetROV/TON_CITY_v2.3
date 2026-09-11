@@ -149,7 +149,13 @@ export default function useTelegramWebApp() {
   // ── BackButton synced with React Router ──
   useEffect(() => {
     if (!isTelegram || !tg?.BackButton) return;
-    const onRoot = location.pathname === '/' || location.pathname === '';
+    // Домашние экраны мини-аппа: корень и карта GRAM Island. Когда игрок
+    // открывает проект через Telegram, он попадает сразу на карту (/ton-island)
+    // — это стартовый экран, и «Назад» здесь вести некуда. На таких экранах мы
+    // ПРЯЧЕМ свою кнопку BackButton, чтобы Telegram показывал нативную кнопку
+    // «Закрыть», а её нажатие закрывало мини-приложение.
+    const HOME_ROUTES = ['/', '', '/ton-island', '/island'];
+    const onRoot = HOME_ROUTES.includes(location.pathname);
 
     const handler = () => {
       // Either pop history if possible, otherwise go home.
@@ -157,15 +163,25 @@ export default function useTelegramWebApp() {
       else navigate('/');
     };
 
+    // На домашнем экране (карта) дополнительно навешиваем закрытие мини-аппа
+    // на аппаратную кнопку «назад» устройства, если пользователь всё же её нажмёт.
+    const closeHandler = () => { safeCall(() => tg.close?.()); };
+
     if (onRoot) {
-      safeCall(() => tg.BackButton.hide());
       safeCall(() => tg.BackButton.offClick(handler));
+      safeCall(() => tg.BackButton.hide());
+      // Разрешаем подтверждение закрытия и вешаем закрытие на back-событие.
+      safeCall(() => tg.BackButton.onClick(closeHandler));
     } else {
+      safeCall(() => tg.BackButton.offClick(closeHandler));
       safeCall(() => tg.BackButton.onClick(handler));
       safeCall(() => tg.BackButton.show());
     }
 
-    return () => safeCall(() => tg.BackButton.offClick(handler));
+    return () => {
+      safeCall(() => tg.BackButton.offClick(handler));
+      safeCall(() => tg.BackButton.offClick(closeHandler));
+    };
   }, [isTelegram, tg, location.pathname, navigate]);
 
   // ── Public helpers ──

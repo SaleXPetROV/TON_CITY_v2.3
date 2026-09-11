@@ -467,9 +467,9 @@ export default function TasksPage({ user, refreshBalance }) {
                   {(task.instructions_i18n || task.instructions) && (
                     <p className="text-[11px] text-text-muted mt-0.5 leading-snug line-clamp-1" data-testid={`task-instructions-${task.id}`}>{description(task)}</p>
                   )}
-                  {(task.partner_need != null && task.partner_metric && !completed) && (
+                  {(task.partner_need != null && !completed) && (
                     <span className="inline-flex items-center gap-1 mt-1 text-[11px] font-semibold text-cyber-cyan" data-testid={`task-progress-badge-${task.id}`}>
-                      {task.partner_metric} {task.partner_progress_ready && task.partner_have != null ? task.partner_have : '—'} {t('questProgressOf') || 'из'} {task.partner_need}
+                      {task.partner_progress_ready && task.partner_have != null ? task.partner_have : 0} {t('questProgressOf') || 'из'} {task.partner_need}
                     </span>
                   )}
                 </div>
@@ -571,7 +571,7 @@ export default function TasksPage({ user, refreshBalance }) {
 
               {/* Прогресс порогового квеста (напр. iTerra tradeVolume): текущее
                   значение из порога с учётом baseline (прирост с момента выдачи). */}
-              {(task.partner_need != null && task.partner_metric) && (() => {
+              {(task.partner_need != null) && (() => {
                 const need = Number(task.partner_need) || 0;
                 const have = task.partner_have != null ? Number(task.partner_have) : null;
                 const ready = task.partner_progress_ready;
@@ -584,7 +584,7 @@ export default function TasksPage({ user, refreshBalance }) {
                         {t('questProgressLabel') || 'Прогресс'}
                       </span>
                       <span className="text-sm font-bold text-cyber-cyan" data-testid={`quest-progress-value-${task.id}`}>
-                        {task.partner_metric} {ready && have != null ? have : '—'} {t('questProgressOf') || 'из'} {need}
+                        {ready && have != null ? have : 0} {t('questProgressOf') || 'из'} {need}
                       </span>
                     </div>
                     <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">

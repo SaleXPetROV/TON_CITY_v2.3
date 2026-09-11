@@ -385,6 +385,7 @@ class TaskCreate(BaseModel):
     partner_user_param: Optional[str] = None  # query param name for the Telegram id (default user_id)
     partner_check_field: Optional[str] = None  # dot-path in JSON response to check (e.g. 'data.tradeVolume')
     partner_check_min: Optional[float] = None  # minimum numeric value required for the quest to count
+    partner_completed_field: Optional[str] = None  # dot-path to a boolean "done" flag (e.g. 'completed')
     instructions: Optional[str] = None        # free-text steps shown to the user
     reward_description: Optional[str] = None   # free-text describing the reward (shown next to the skin)
     reward_resources: Optional[Dict[str, float]] = None  # {resource_type: amount}
@@ -403,6 +404,18 @@ class DailyRewardsUpdate(BaseModel):
 
 class ReorderPayload(BaseModel):
     ids: List[str]
+
+
+class TestPartnerRequest(BaseModel):
+    partner_url: str
+    partner_method: Optional[str] = "GET"
+    partner_api_key: Optional[str] = None
+    partner_user_param: Optional[str] = None      # e.g. 'telegram_id' or 'chatId'
+    partner_ref_id: Optional[str] = None
+    partner_check_field: Optional[str] = None
+    partner_check_min: Optional[float] = None
+    partner_completed_field: Optional[str] = None
+    test_user_id: str                             # telegram id / chatId to probe with
 
 
 class ActiveToggle(BaseModel):
@@ -653,6 +666,21 @@ def create_tasks_router(db, get_current_user, get_admin_user):
         if status != 200:
             logger.info(f"partner quest {task.get('id')} not completed for user {uid}: HTTP {status}")
             raise HTTPException(status_code=400, detail=_msg(lang, "partner_incomplete"))
+        # Булев флаг завершения (напр. five-battles → {"completed": true}).
+        # Если поле задано ЯВНО — засчитываем только при truthy-значении.
+        # Если не задано, но в ответе есть ключ "completed" — используем его.
+        try:
+            _body_c = resp.json()
+        except Exception:
+            _body_c = {}
+        completed_field = (task.get("partner_completed_field") or "").strip()
+        if not completed_field and isinstance(_body_c, dict) and "completed" in _body_c:
+            completed_field = "completed"
+        if completed_field:
+            if not _extract_bool_value(_body_c, completed_field):
+                logger.info(f"partner quest {task.get('id')} not completed for {uid}: {completed_field}=falsy")
+                raise HTTPException(status_code=400, detail=_msg(lang, "partner_incomplete"))
+            return {"ok": True}
         # Опциональная пороговая проверка числового поля из JSON-ответа
         # (например iTerra: data.tradeVolume). Считаем ПРИРОСТ с момента выдачи
         # задания: have = current - baseline. Так старые сделки iTerra не
@@ -826,6 +854,22 @@ def create_tasks_router(db, get_current_user, get_admin_user):
             return float(node)
         except (TypeError, ValueError):
             return None
+
+    def _extract_bool_value(body, field: str) -> bool:
+        """Достать булев флаг завершения по dot-path (например 'completed').
+        Truthy: True, 1, '1', 'true', 'yes', 'ok', 'done', 'completed'."""
+        if not body or not field:
+            return False
+        node = body
+        for part in field.split("."):
+            node = node.get(part) if isinstance(node, dict) else None
+        if isinstance(node, bool):
+            return node
+        if isinstance(node, (int, float)):
+            return node != 0
+        if isinstance(node, str):
+            return node.strip().lower() in ("1", "true", "yes", "ok", "done", "completed")
+        return False
 
     async def _partner_metric_value(user_doc: dict, task: dict, max_age: int = 30):
         """Текущее значение метрики партнёра с коротким кэшем (по умолчанию 30 с),
@@ -1018,10 +1062,44 @@ def create_tasks_router(db, get_current_user, get_admin_user):
         return {"success": False, "status": "pending", "message": _msg(lang, "boost_not_found")}
 
     # ==================== USER ENDPOINTS ====================
+    async def _localize_task(t: dict, target_lang: str) -> None:
+        """Авто-перевод пользовательских текстов задания на язык игрока — через
+        тот же движок, что и чат проекта (translation_service.translate_cached,
+        с кэшем в Mongo). Заполняем *_i18n[target_lang]; фронт уже умеет их брать.
+        Перевод пропускается, если язык совпадает с исходным или текст пуст."""
+        try:
+            from translation_service import translate_cached, detect_language, translation_configured
+        except Exception:
+            return
+        if not translation_configured():
+            return
+        for base, i18n_key in (("title", "title_i18n"),
+                                ("instructions", "instructions_i18n"),
+                                ("reward_description", "reward_description_i18n")):
+            text = (t.get(base) or "").strip()
+            if not text:
+                continue
+            existing = t.get(i18n_key) or {}
+            # Уже есть готовый перевод (заданный админом вручную) — не трогаем.
+            if isinstance(existing, dict) and existing.get(target_lang):
+                continue
+            src = detect_language(text) or "auto"
+            if src == target_lang:
+                continue
+            try:
+                translated = await translate_cached(db, text, target_lang, src)
+            except Exception:
+                translated = None
+            if translated and translated.strip() and translated.strip() != text:
+                merged = dict(existing) if isinstance(existing, dict) else {}
+                merged[target_lang] = translated.strip()
+                t[i18n_key] = merged
+
     @user_router.get("")
     async def list_tasks(current_user=Depends(get_current_user)):
         user_doc = await _full_user(current_user)
         uid = user_doc.get("id")
+        lang = (user_doc.get("language") or "en").split("-")[0]
         tasks = await db.tasks.find({"active": {"$ne": False}}, {"_id": 0}).sort([("order", 1), ("created_at", 1)]).to_list(200)
         completed_ids = set()
         async for c in db.task_completions.find({"user_id": uid}, {"_id": 0, "task_id": 1}):
@@ -1099,6 +1177,7 @@ def create_tasks_router(db, get_current_user, get_admin_user):
                 t["remaining_seconds"] = sr["remaining_seconds"]
                 t["check_available_at"] = sr["check_available_at"]
             t["status"] = status
+            await _localize_task(t, lang)
             out.append(t)
         # completed tasks sink to the bottom
         out.sort(key=lambda x: 1 if x["status"] == "completed" else 0)
@@ -1404,6 +1483,7 @@ def create_tasks_router(db, get_current_user, get_admin_user):
         quest_kind = None
         partner_url = partner_ref_id = partner_method = partner_api_key = partner_user_param = None
         partner_check_field = partner_check_min = None
+        partner_completed_field = None
         reward_resources = None
         reward_skins = None
         if data.action_type in QUEST_TYPES:
@@ -1427,6 +1507,7 @@ def create_tasks_router(db, get_current_user, get_admin_user):
                     partner_check_min = float(data.partner_check_min) if data.partner_check_min is not None else None
                 except (TypeError, ValueError):
                     partner_check_min = None
+                partner_completed_field = (data.partner_completed_field or "").strip() or None
             # Normalize resource rewards {resource_type: positive amount}
             if data.reward_resources:
                 reward_resources = {}
@@ -1506,6 +1587,7 @@ def create_tasks_router(db, get_current_user, get_admin_user):
             "partner_user_param": partner_user_param,
             "partner_check_field": partner_check_field,
             "partner_check_min": partner_check_min,
+            "partner_completed_field": partner_completed_field,
             "instructions": (data.instructions or None),
             "instructions_i18n": instructions_i18n,
             "reward_description": reward_desc_clean,
@@ -1519,6 +1601,85 @@ def create_tasks_router(db, get_current_user, get_admin_user):
                                   if data.show_to_referrals is not None else True),
         }
         return fields, reward_skins
+
+    @admin_router.post("/test-partner")
+    async def admin_test_partner(data: TestPartnerRequest, admin=Depends(get_admin_user)):
+        """Предпросмотр ответа сервера партнёра при создании/изменении задания.
+        Делает реальный запрос с указанным test_user_id и возвращает сырой ответ
+        и вердикт (пройдёт ли проверка). Baseline НЕ применяется — это превью."""
+        url = (data.partner_url or "").strip()
+        if not url.lower().startswith(("http://", "https://")):
+            raise HTTPException(status_code=400, detail="partner_url must be a valid http(s) URL")
+        method = (data.partner_method or "GET").upper()
+        if method not in ("GET", "POST"):
+            method = "GET"
+        user_param = (data.partner_user_param or "user_id").strip() or "user_id"
+        payload = {
+            user_param: str(data.test_user_id or "").strip(),
+            "internal_user_id": "preview",
+            "ref_id": data.partner_ref_id or "",
+        }
+        headers = {"User-Agent": "GRAMCity-QuestVerifier/1.0"}
+        if (data.partner_api_key or "").strip():
+            headers["x-api-key"] = data.partner_api_key.strip()
+        from urllib.parse import urlsplit, parse_qsl, urlunsplit, urlencode
+        parts = urlsplit(url)
+        params = dict(parse_qsl(parts.query, keep_blank_values=True))
+        params.update(payload)
+        clean_url = urlunsplit((parts.scheme, parts.netloc, parts.path, "", parts.fragment))
+        try:
+            async with httpx.AsyncClient(timeout=20, follow_redirects=True, headers=headers) as client:
+                if method == "POST":
+                    resp = await client.post(clean_url, json=payload, params=params)
+                else:
+                    resp = await client.get(clean_url, params=params)
+        except Exception as e:
+            return {"ok": False, "reachable": False, "error": str(e),
+                    "request_url": f"{clean_url}?{urlencode(params)}", "verdict": False,
+                    "verdict_reason": "Не удалось связаться с сервером партнёра"}
+        status = resp.status_code
+        try:
+            body = resp.json()
+            raw = body
+        except Exception:
+            body = None
+            raw = (resp.text or "")[:2000]
+        # Вердикт (та же логика, что и в реальной проверке, но без baseline).
+        completed_field = (data.partner_completed_field or "").strip()
+        if not completed_field and isinstance(body, dict) and "completed" in body:
+            completed_field = "completed"
+        extracted_value = None
+        completed_value = None
+        verdict = False
+        reason = ""
+        if status != 200:
+            reason = f"HTTP {status} (ожидался 200)"
+        elif completed_field:
+            completed_value = _extract_bool_value(body, completed_field)
+            verdict = bool(completed_value)
+            reason = f"{completed_field} = {completed_value}"
+        elif (data.partner_check_field or "").strip() and data.partner_check_min is not None:
+            extracted_value = _extract_check_value(body, (data.partner_check_field or "").strip())
+            if extracted_value is None:
+                reason = f"Поле «{data.partner_check_field}» не найдено или не число"
+            else:
+                verdict = float(extracted_value) >= float(data.partner_check_min)
+                reason = f"{data.partner_check_field} = {extracted_value} (порог {data.partner_check_min}); baseline при реальной проверке вычтет прежнее значение"
+        else:
+            verdict = True
+            reason = "HTTP 200 без доп. проверок — засчитывается сразу"
+        return {
+            "ok": True,
+            "reachable": True,
+            "request_url": f"{clean_url}?{urlencode(params)}",
+            "sent_params": params,
+            "status": status,
+            "raw_response": raw,
+            "extracted_value": extracted_value,
+            "completed_value": completed_value,
+            "verdict": verdict,
+            "verdict_reason": reason,
+        }
 
     @admin_router.post("")
     async def admin_create_task(data: TaskCreate, admin=Depends(get_admin_user)):

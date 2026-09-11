@@ -163,8 +163,46 @@ async def seize_business(db, business: dict, reason: str) -> dict:
         await db.plots.update_one({"id": plot["id"]},
                                   {"$set": {"on_sale": True, "listing_id": listing["id"]}})
 
+    # Уведомляем бывшего владельца о реальном изъятии с указанием причины
+    # (только credit_default / durability_zero — задача пользователя).
+    try:
+        await _notify_seizure(db, former_owner, business, reason, price)
+    except Exception as e:
+        logger.error(f"seize_business notify failed for {business_id}: {e}")
+
     logger.info(f"⚖️ SEIZED business {business_id} ({reason}) → listed under GRAM CITY at {price} TON")
     return listing
+
+
+def _seized_biz_name(business: dict, lang: str) -> str:
+    mapped = BUSINESS_KEY_MAP.get(business.get("business_type"), business.get("business_type"))
+    cfg = BUSINESSES.get(mapped) or BUSINESSES.get(business.get("business_type")) or {}
+    names = cfg.get("name", {}) or {}
+    if isinstance(names, dict):
+        return names.get(lang) or names.get("en") or names.get("ru") or (business.get("business_type") or "business")
+    return str(names or business.get("business_type") or "business")
+
+
+async def _notify_seizure(db, former_owner, business: dict, reason: str, price: float) -> None:
+    """Локализованное уведомление бывшему владельцу о причине изъятия."""
+    if not former_owner or reason not in ("credit_default", "durability_zero"):
+        return
+    user = await db.users.find_one(
+        {"$or": [{"id": former_owner}, {"wallet_address": former_owner}, {"email": former_owner}]},
+        {"_id": 0},
+    )
+    if not user:
+        return
+    from core.notify import notify_user
+    from core.notif_i18n import user_lang
+    lang = user_lang(user)
+    key = "business_seized_credit" if reason == "credit_default" else "business_seized_durability"
+    await notify_user(
+        db, user, title=None, message=None,
+        type_key="business_seized", priority="high",
+        i18n_key=key,
+        i18n_vars={"biz": _seized_biz_name(business, lang), "price": round(float(price or 0), 4)},
+    )
 
 
 async def process_seizures(db) -> dict:
