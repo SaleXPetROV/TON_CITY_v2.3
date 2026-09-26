@@ -1265,12 +1265,12 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                   </button>
                 </div>
 
-                {/* CENTER: business card carousel */}
-                <div className="flex-1 min-w-0 basis-0 h-full">
+                {/* CENTER: business skin carousel (swipe только скин) */}
+                <div className="flex-1 min-w-0 basis-0 h-full flex flex-col">
                   <div
                     ref={bizCarouselRef}
                     onScroll={handleBizScroll}
-                    className="flex gap-4 w-full h-full min-w-0 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide"
+                    className="flex gap-4 w-full flex-1 min-h-0 min-w-0 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide"
                   >
                 {businesses.map((biz) => {
                   // ── Данные для скина ─────────────────────────────────────
@@ -1300,27 +1300,25 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                     className="group shrink-0 w-full snap-start h-full flex flex-col items-center justify-center gap-3 px-2 pt-6"
                     data-testid={biz.tutorial ? 'tutorial-business-card' : `business-card-${biz.id}`}
                   >
-                    {/* ── СКИН БИЗНЕСА по центру (без карточки) ────────────── */}
-                    <div
-                      className="relative flex items-center justify-center w-full flex-1 min-h-[7rem]"
+                    {/* ── Название бизнеса — НАД скином ────────────────────── */}
+                    <div className="shrink-0 flex justify-center px-2">
+                      <h3 className="font-extrabold text-white text-lg sm:text-xl uppercase tracking-wide leading-tight text-center break-words">
+                        {bizName}
+                      </h3>
+                    </div>
+
+                    {/* ── СКИН БИЗНЕСА (клик → модалка с инфо) ─────────────── */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isTutorialActive) { blockedTutorialToast(); return; }
+                        openDetails(biz);
+                      }}
+                      disabled={isTutorialActive}
+                      aria-label={bizName}
+                      className="relative flex items-center justify-center w-full flex-1 min-h-[7rem] focus:outline-none active:scale-[0.98] transition-transform disabled:cursor-not-allowed"
                       data-testid={`business-image-${biz.id}`}
                     >
-                      {/* Кнопка деталей (i) — плавающая справа сверху */}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          if (isTutorialActive) { blockedTutorialToast(); return; }
-                          openDetails(biz);
-                        }}
-                        disabled={isTutorialActive}
-                        aria-label="Details"
-                        className="absolute right-1 top-1 z-10 text-text-muted hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed h-8 w-8 p-0 rounded-full border border-white/15 bg-black/40 backdrop-blur-sm"
-                        data-testid={`business-settings-${biz.id}`}
-                      >
-                        <Info className="w-4 h-4" />
-                      </Button>
-
                       {/* hidden testid to keep tier/level info reachable for tests */}
                       <span className="sr-only" data-testid={`business-tier-level-${biz.id}`}>
                         {t('tierLabel')} {biz.config?.tier || 1} • {t('levelLabel')} {biz.level ?? 1}
@@ -1330,7 +1328,7 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                         <img
                           src={skinUrl}
                           alt={bizName}
-                          className="max-h-[34vh] h-auto w-auto max-w-[78%] object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.55)]"
+                          className="max-h-[34vh] h-auto w-auto max-w-[78%] object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.55)] pointer-events-none"
                           loading="lazy"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
@@ -1339,11 +1337,11 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                           }}
                         />
                       )}
-                      <span className="text-7xl leading-none" style={{ display: skinUrl ? 'none' : 'block' }}>{bizIcon}</span>
-                    </div>
+                      <span className="text-7xl leading-none pointer-events-none" style={{ display: skinUrl ? 'none' : 'block' }}>{bizIcon}</span>
+                    </button>
 
                     {/* ── Статус бизнеса ПОД скином ────────────────────────── */}
-                    <div className="flex justify-center shrink-0">
+                    <div className="flex justify-center shrink-0 -mt-1">
                       <Badge data-testid={`work-status-${biz.id}`} className={
                         _bizStatus === 'working' ? 'bg-green-500/20 text-green-400'
                         : _bizStatus === 'on_sale' ? 'bg-amber-500/20 text-amber-400'
@@ -1361,8 +1359,25 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                   );
                 })}
               </div>
-              {/* Точки-карусель перенесены в закреплённый нижний блок (над кнопками
-                  действий), чтобы были видны всегда и не вытесняли кнопки. */}
+              {/* Точки-карусель ПОД скином (фиксированы, не свайпаются) */}
+              {businesses.length > 1 && (
+                <div className="flex justify-center gap-2 pt-2 shrink-0" data-testid="biz-carousel-dots">
+                  {businesses.map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      aria-label={`Бизнес ${i + 1}`}
+                      onClick={() => {
+                        const el = bizCarouselRef.current;
+                        const ch = el && el.children ? el.children[i] : null;
+                        if (ch) ch.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+                      }}
+                      data-testid={`biz-carousel-dot-${i}`}
+                      className={`h-2 rounded-full transition-all duration-300 ${i === activeBizIndex ? 'w-6 bg-cyber-cyan' : 'w-2 bg-white/30'}`}
+                    />
+                  ))}
+                </div>
+              )}
                 </div>{/* end center column (карусель + точки) */}
 
                 {/* RIGHT: компактная кнопка МАРКЕТПЛЕЙС */}
@@ -1378,93 +1393,9 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                   </button>
                 </div>
               </div>{/* end central block flex row */}
-
-              {/* ── ФИКСИРОВАННЫЕ панели активного бизнеса (НЕ перелистываются,
-                     обновляются под активный скин; на 30% шире прежних) ── */}
-              {(() => {
-                const abiz = businesses[activeBizIndex] || businesses[0];
-                if (!abiz) return null;
-                const _baseProd = abiz.production?.base_production || abiz.config?.base_production || 100;
-                const _dur = abiz.durability ?? 100;
-                const _durMult = _dur <= 0 ? 0 : _dur < 50 ? 0.8 : 1.0;
-                const _buffMult = abiz.production?.user_buff_multiplier || 1.0;
-                const _hourlyRaw = (_baseProd * _durMult * _buffMult) / 24;
-                const _hourly = _hourlyRaw < 100 ? Number(_hourlyRaw.toFixed(2)) : Math.round(_hourlyRaw);
-                const _consumes = abiz.production?.consumption_breakdown || abiz.config?.consumes;
-                const _consumeEntries = !_consumes ? [] : (Array.isArray(_consumes)
-                  ? _consumes.map(c => [c.resource || c.type, c.amount || c.rate || 0])
-                  : Object.entries(_consumes));
-                const _produceIcon = abiz.config?.produces
-                  ? (getResource(abiz.config.produces, lang)?.icon || resourceIcons[abiz.config.produces] || '📦')
-                  : '📦';
-                const _consumeIcon = _consumeEntries.length
-                  ? (getResource(_consumeEntries[0][0], lang)?.icon || '📦')
-                  : '📦';
-                const HOUR_SHORT = { ru: 'ч', en: 'h', es: 'h', zh: '时', fr: 'h', de: 'Std.', ja: '時', ko: '시', id: 'j' };
-                const DAY_SHORT = { ru: 'сут', en: 'day', es: 'día', zh: '天', fr: 'j', de: 'Tag', ja: '日', ko: '일', id: 'hr' };
-                const hourShort = HOUR_SHORT[lang] || HOUR_SHORT.ru;
-                const dayShort = DAY_SHORT[lang] || DAY_SHORT.ru;
-                return (
-                  <div className="w-full max-w-[29rem] mx-auto flex flex-col gap-2 shrink-0 px-2 pb-1" data-testid="biz-fixed-panels">
-                    {/* Прочность */}
-                    <div className="rounded-2xl bg-black/40 border border-cyber-cyan/30 shadow-[0_0_18px_rgba(34,211,238,0.12)] px-4 py-2.5">
-                      <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-white/80 flex items-center gap-2 font-semibold text-base">
-                          <Wrench className="w-5 h-5 text-cyber-cyan" /> {t('durabilityLabel')}:
-                        </span>
-                        <span className={`font-extrabold text-lg ${abiz.durability < 30 ? 'text-red-400' : 'text-white'}`} data-testid={`durability-value-${abiz.id}`}>
-                          {(abiz.durability ?? 100).toFixed(1)}%
-                        </span>
-                      </div>
-                      <Progress value={abiz.durability ?? 100} className="h-2.5" />
-                      {abiz.durability < 30 && (
-                        <div className="flex items-center gap-1 text-red-400 text-xs mt-1.5">
-                          <AlertCircle className="w-3 h-3" />
-                          {t('needsRepair')}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Склад */}
-                    {abiz.storage_info && abiz.storage_info.capacity > 0 && (
-                      <div className="rounded-2xl bg-black/40 border border-cyber-cyan/30 shadow-[0_0_18px_rgba(34,211,238,0.12)] px-4 py-3 flex items-center justify-center gap-2.5" data-testid={`storage-panel-${abiz.id}`}>
-                        <Package className="w-6 h-6 text-amber-400 shrink-0" />
-                        <span className="text-white font-extrabold text-lg uppercase tracking-wide">
-                          {t('warehouseLabel')}: {abiz.storage_info.used}/{abiz.storage_info.capacity}
-                        </span>
-                      </div>
-                    )}
-                    {abiz.storage_info?.is_full && (
-                      <div className="text-red-400 text-xs flex items-center gap-1 justify-center">
-                        <AlertCircle className="w-3 h-3" />
-                        {t('warehouseFullMsg')}
-                      </div>
-                    )}
-
-                    {/* Чипы дохода/расхода */}
-                    <div className="flex gap-2">
-                      <div className="flex-1 min-w-0 rounded-2xl bg-black/40 border border-green-400/30 shadow-[0_0_14px_rgba(74,222,128,0.12)] px-3 py-2.5 flex items-center justify-center gap-2" data-testid={`income-chip-${abiz.id}`}>
-                        <span className="text-lg leading-none">{_produceIcon}</span>
-                        <span className="text-green-400 font-extrabold text-base whitespace-nowrap">+{_hourly}/{hourShort}</span>
-                      </div>
-                      {_consumeEntries.length > 0 && (
-                        <div className="flex-1 min-w-0 rounded-2xl bg-black/40 border border-sky-400/30 shadow-[0_0_14px_rgba(56,189,248,0.12)] px-3 py-2.5 flex items-center justify-center gap-2" data-testid={`expense-chip-${abiz.id}`}>
-                          <span className="text-lg leading-none">{_consumeIcon}</span>
-                          <span className="text-sky-400 font-extrabold text-base whitespace-nowrap">−{_consumeEntries[0][1]}/{dayShort}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Level-0 lease countdown */}
-                    {abiz.level === 0 && abiz.expires_at && (
-                      <ZeroLeaseTimer expiresAt={abiz.expires_at} t={t} />
-                    )}
-                  </div>
-                );
-              })()}
-              </div>{/* end flex-col wrapper (карусель + фикс. панели) */}
-              {/* Нижний ряд действий вынесен из прокрутки и закреплён над нижней
-                  навигацией — см. блок после </ScrollArea> ниже. */}
+              </div>{/* end flex-col wrapper (карусель) */}
+              {/* Панели активного бизнеса вынесены в закреплённый нижний блок
+                  (над кнопками действий) — см. блок ниже. */}
               </>
             )}
             </div>{/* end biz-central-wrap */}
@@ -1482,26 +1413,88 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
             className="shrink-0 px-4 lg:px-6 pt-1.5 pb-2 lg:pb-4 bg-void"
             data-testid="biz-action-row-pinned"
           >
-          {/* Точки-карусель: показывают количество бизнесов и переключаются
-              при свайпе. Закреплены над кнопками — видны всегда. */}
-          {businesses.length > 1 && (
-            <div className="flex justify-center gap-2 mb-2" data-testid="biz-carousel-dots">
-              {businesses.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  aria-label={`Бизнес ${i + 1}`}
-                  onClick={() => {
-                    const el = bizCarouselRef.current;
-                    const ch = el && el.children ? el.children[i] : null;
-                    if (ch) ch.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
-                  }}
-                  data-testid={`biz-carousel-dot-${i}`}
-                  className={`h-2 rounded-full transition-all duration-300 ${i === activeBizIndex ? 'w-6 bg-cyber-cyan' : 'w-2 bg-white/30'}`}
-                />
-              ))}
-            </div>
-          )}
+          {/* ── ФИКСИРОВАННЫЕ панели активного бизнеса (НЕ перелистываются,
+                 прикреплены к кнопкам действий с небольшим отступом) ── */}
+          {(businesses[activeBizIndex] || businesses[0]) && (() => {
+            const abiz = businesses[activeBizIndex] || businesses[0];
+            const _baseProd = abiz.production?.base_production || abiz.config?.base_production || 100;
+            const _dur = abiz.durability ?? 100;
+            const _durMult = _dur <= 0 ? 0 : _dur < 50 ? 0.8 : 1.0;
+            const _buffMult = abiz.production?.user_buff_multiplier || 1.0;
+            const _hourlyRaw = (_baseProd * _durMult * _buffMult) / 24;
+            const _hourly = _hourlyRaw < 100 ? Number(_hourlyRaw.toFixed(2)) : Math.round(_hourlyRaw);
+            const _consumes = abiz.production?.consumption_breakdown || abiz.config?.consumes;
+            const _consumeEntries = !_consumes ? [] : (Array.isArray(_consumes)
+              ? _consumes.map(c => [c.resource || c.type, c.amount || c.rate || 0])
+              : Object.entries(_consumes));
+            const _produceIcon = abiz.config?.produces
+              ? (getResource(abiz.config.produces, lang)?.icon || resourceIcons[abiz.config.produces] || '📦')
+              : '📦';
+            const _consumeIcon = _consumeEntries.length
+              ? (getResource(_consumeEntries[0][0], lang)?.icon || '📦')
+              : '📦';
+            const HOUR_SHORT = { ru: 'ч', en: 'h', es: 'h', zh: '时', fr: 'h', de: 'Std.', ja: '時', ko: '시', id: 'j' };
+            const DAY_SHORT = { ru: 'сут', en: 'day', es: 'día', zh: '天', fr: 'j', de: 'Tag', ja: '日', ko: '일', id: 'hr' };
+            const hourShort = HOUR_SHORT[lang] || HOUR_SHORT.ru;
+            const dayShort = DAY_SHORT[lang] || DAY_SHORT.ru;
+            return (
+              <div className="w-full max-w-[29rem] mx-auto flex flex-col gap-2 mb-3" data-testid="biz-fixed-panels">
+                {/* Прочность */}
+                <div className="rounded-2xl bg-black/40 border border-cyber-cyan/30 shadow-[0_0_18px_rgba(34,211,238,0.12)] px-4 py-2.5">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-white/80 flex items-center gap-2 font-semibold text-base">
+                      <Wrench className="w-5 h-5 text-cyber-cyan" /> {t('durabilityLabel')}:
+                    </span>
+                    <span className={`font-extrabold text-lg ${abiz.durability < 30 ? 'text-red-400' : 'text-white'}`} data-testid={`durability-value-${abiz.id}`}>
+                      {(abiz.durability ?? 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <Progress value={abiz.durability ?? 100} className="h-2.5" />
+                  {abiz.durability < 30 && (
+                    <div className="flex items-center gap-1 text-red-400 text-xs mt-1.5">
+                      <AlertCircle className="w-3 h-3" />
+                      {t('needsRepair')}
+                    </div>
+                  )}
+                </div>
+
+                {/* Склад */}
+                {abiz.storage_info && abiz.storage_info.capacity > 0 && (
+                  <div className="rounded-2xl bg-black/40 border border-cyber-cyan/30 shadow-[0_0_18px_rgba(34,211,238,0.12)] px-4 py-3 flex items-center justify-center gap-2.5" data-testid={`storage-panel-${abiz.id}`}>
+                    <Package className="w-6 h-6 text-amber-400 shrink-0" />
+                    <span className="text-white font-extrabold text-lg uppercase tracking-wide">
+                      {t('warehouseLabel')}: {abiz.storage_info.used}/{abiz.storage_info.capacity}
+                    </span>
+                  </div>
+                )}
+                {abiz.storage_info?.is_full && (
+                  <div className="text-red-400 text-xs flex items-center gap-1 justify-center">
+                    <AlertCircle className="w-3 h-3" />
+                    {t('warehouseFullMsg')}
+                  </div>
+                )}
+
+                {/* Чипы дохода/расхода */}
+                <div className="flex gap-2">
+                  <div className="flex-1 min-w-0 rounded-2xl bg-black/40 border border-green-400/30 shadow-[0_0_14px_rgba(74,222,128,0.12)] px-3 py-2.5 flex items-center justify-center gap-2" data-testid={`income-chip-${abiz.id}`}>
+                    <span className="text-lg leading-none">{_produceIcon}</span>
+                    <span className="text-green-400 font-extrabold text-base whitespace-nowrap">+{_hourly}/{hourShort}</span>
+                  </div>
+                  {_consumeEntries.length > 0 && (
+                    <div className="flex-1 min-w-0 rounded-2xl bg-black/40 border border-sky-400/30 shadow-[0_0_14px_rgba(56,189,248,0.12)] px-3 py-2.5 flex items-center justify-center gap-2" data-testid={`expense-chip-${abiz.id}`}>
+                      <span className="text-lg leading-none">{_consumeIcon}</span>
+                      <span className="text-sky-400 font-extrabold text-base whitespace-nowrap">−{_consumeEntries[0][1]}/{dayShort}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Level-0 lease countdown */}
+                {abiz.level === 0 && abiz.expires_at && (
+                  <ZeroLeaseTimer expiresAt={abiz.expires_at} t={t} />
+                )}
+              </div>
+            );
+          })()}
           {(businesses[activeBizIndex] || businesses[0]) && (() => {
             const activeBiz = businesses[activeBizIndex] || businesses[0];
             // Кнопка «Ремонт» всегда активна (кроме обучения) — выполняет ту же
