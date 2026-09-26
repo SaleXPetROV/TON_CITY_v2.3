@@ -1250,7 +1250,7 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
               </div>
             ) : (
               <>
-              <div className="flex flex-col w-full h-full min-h-0">
+              <div className="flex flex-col w-full flex-1 min-h-0 self-stretch">
               <div className="flex items-stretch gap-2 sm:gap-3 w-[calc(100vw-2rem)] lg:w-full max-w-full overflow-hidden flex-1 min-h-0">
                 {/* LEFT: компактная кнопка ЗАДАНИЯ */}
                 <div className="flex flex-col gap-2 shrink-0 self-start pt-1">
@@ -1266,7 +1266,7 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                 </div>
 
                 {/* CENTER: business skin carousel (swipe только скин) */}
-                <div className="flex-1 min-w-0 basis-0 h-full flex flex-col">
+                <div className="flex-1 min-w-0 basis-0 min-h-0 flex flex-col self-stretch">
                   <div className="relative flex-1 min-h-0 flex">
                   <div
                     ref={bizCarouselRef}
@@ -1298,7 +1298,7 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                     key={biz.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="group shrink-0 w-full snap-start h-full flex flex-col items-center justify-center gap-3 px-2 pt-6"
+                    className="group shrink-0 w-full snap-start h-full flex flex-col items-center justify-center gap-4 px-2"
                     data-testid={biz.tutorial ? 'tutorial-business-card' : `business-card-${biz.id}`}
                   >
                     {/* ── Название бизнеса — НАД скином ────────────────────── */}
@@ -1360,39 +1360,6 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                   );
                 })}
               </div>
-              {/* Стрелки перелистывания рядом со скином (циклично: влево/вправо) */}
-              {businesses.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    aria-label="Previous business"
-                    data-testid="biz-nav-prev"
-                    onClick={() => {
-                      const n = businesses.length;
-                      const target = ((activeBizIndex - 1) % n + n) % n;
-                      const ch = bizCarouselRef.current?.children?.[target];
-                      if (ch) ch.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
-                    }}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 z-20 h-9 w-9 rounded-full bg-black/50 border border-cyber-cyan/40 text-cyber-cyan flex items-center justify-center backdrop-blur-sm hover:brightness-125 active:scale-90 transition-all"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Next business"
-                    data-testid="biz-nav-next"
-                    onClick={() => {
-                      const n = businesses.length;
-                      const target = (activeBizIndex + 1) % n;
-                      const ch = bizCarouselRef.current?.children?.[target];
-                      if (ch) ch.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
-                    }}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 z-20 h-9 w-9 rounded-full bg-black/50 border border-cyber-cyan/40 text-cyber-cyan flex items-center justify-center backdrop-blur-sm hover:brightness-125 active:scale-90 transition-all"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </>
-              )}
               </div>{/* end relative carousel wrapper */}
               {/* Точки-карусель ПОД скином (фиксированы, не свайпаются) */}
               {businesses.length > 1 && (
