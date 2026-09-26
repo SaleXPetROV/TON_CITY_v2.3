@@ -1267,10 +1267,11 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
 
                 {/* CENTER: business skin carousel (swipe только скин) */}
                 <div className="flex-1 min-w-0 basis-0 h-full flex flex-col">
+                  <div className="relative flex-1 min-h-0 flex">
                   <div
                     ref={bizCarouselRef}
                     onScroll={handleBizScroll}
-                    className="flex gap-4 w-full flex-1 min-h-0 min-w-0 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide"
+                    className="flex gap-4 w-full h-full min-w-0 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide"
                   >
                 {businesses.map((biz) => {
                   // ── Данные для скина ─────────────────────────────────────
@@ -1359,6 +1360,40 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                   );
                 })}
               </div>
+              {/* Стрелки перелистывания рядом со скином (циклично: влево/вправо) */}
+              {businesses.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    aria-label="Previous business"
+                    data-testid="biz-nav-prev"
+                    onClick={() => {
+                      const n = businesses.length;
+                      const target = ((activeBizIndex - 1) % n + n) % n;
+                      const ch = bizCarouselRef.current?.children?.[target];
+                      if (ch) ch.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+                    }}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-20 h-9 w-9 rounded-full bg-black/50 border border-cyber-cyan/40 text-cyber-cyan flex items-center justify-center backdrop-blur-sm hover:brightness-125 active:scale-90 transition-all"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Next business"
+                    data-testid="biz-nav-next"
+                    onClick={() => {
+                      const n = businesses.length;
+                      const target = (activeBizIndex + 1) % n;
+                      const ch = bizCarouselRef.current?.children?.[target];
+                      if (ch) ch.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+                    }}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-20 h-9 w-9 rounded-full bg-black/50 border border-cyber-cyan/40 text-cyber-cyan flex items-center justify-center backdrop-blur-sm hover:brightness-125 active:scale-90 transition-all"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
+              </div>{/* end relative carousel wrapper */}
               {/* Точки-карусель ПОД скином (фиксированы, не свайпаются) */}
               {businesses.length > 1 && (
                 <div className="flex justify-center gap-2 pt-2 shrink-0" data-testid="biz-carousel-dots">
@@ -1442,10 +1477,10 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                 {/* Прочность */}
                 <div className="rounded-2xl bg-black/40 border border-cyber-cyan/30 shadow-[0_0_18px_rgba(34,211,238,0.12)] px-4 py-2.5">
                   <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-white/80 flex items-center gap-2 font-semibold text-base">
-                      <Wrench className="w-5 h-5 text-cyber-cyan" /> {t('durabilityLabel')}:
+                    <span className="text-white/80 flex items-center gap-2 font-semibold text-sm">
+                      <Wrench className="w-4 h-4 text-cyber-cyan" /> {t('durabilityLabel')}:
                     </span>
-                    <span className={`font-extrabold text-lg ${abiz.durability < 30 ? 'text-red-400' : 'text-white'}`} data-testid={`durability-value-${abiz.id}`}>
+                    <span className={`font-extrabold text-base ${abiz.durability < 30 ? 'text-red-400' : 'text-white'}`} data-testid={`durability-value-${abiz.id}`}>
                       {(abiz.durability ?? 100).toFixed(1)}%
                     </span>
                   </div>
@@ -1460,9 +1495,9 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
 
                 {/* Склад */}
                 {abiz.storage_info && abiz.storage_info.capacity > 0 && (
-                  <div className="rounded-2xl bg-black/40 border border-cyber-cyan/30 shadow-[0_0_18px_rgba(34,211,238,0.12)] px-4 py-3 flex items-center justify-center gap-2.5" data-testid={`storage-panel-${abiz.id}`}>
-                    <Package className="w-6 h-6 text-amber-400 shrink-0" />
-                    <span className="text-white font-extrabold text-lg uppercase tracking-wide">
+                  <div className="rounded-2xl bg-black/40 border border-cyber-cyan/30 shadow-[0_0_18px_rgba(34,211,238,0.12)] px-4 py-2.5 flex items-center justify-center gap-2" data-testid={`storage-panel-${abiz.id}`}>
+                    <Package className="w-5 h-5 text-amber-400 shrink-0" />
+                    <span className="text-white font-extrabold text-sm uppercase tracking-wide">
                       {t('warehouseLabel')}: {abiz.storage_info.used}/{abiz.storage_info.capacity}
                     </span>
                   </div>
