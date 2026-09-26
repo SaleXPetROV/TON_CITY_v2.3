@@ -8,7 +8,7 @@ import {
   Play, Pause, Check, X, AlertCircle, Shield, Heart,
   Crown, Users, Warehouse, Clock, Loader2, Tag,
   FileText, HandshakeIcon, ChevronDown, Scroll, Target, ChevronLeft,
-  Info, ArrowUpFromLine
+  Info, ArrowUpFromLine, Store
 } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import BusinessProfileHeader from '@/components/BusinessProfileHeader';
@@ -1251,17 +1251,16 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
             ) : (
               <>
               <div className="flex items-stretch gap-2 sm:gap-3 w-[calc(100vw-2rem)] lg:w-full max-w-full overflow-hidden h-full">
-                {/* LEFT: кнопка ЗАДАНИЯ
-                    (как на референсе: кнопка «Задания» перенесена из правой части влево) */}
-                <div className="flex flex-col gap-2 shrink-0 self-start">
+                {/* LEFT: компактная кнопка ЗАДАНИЯ */}
+                <div className="flex flex-col gap-2 shrink-0 self-start pt-1">
                   <button
                     type="button"
                     onClick={() => navigate('/tasks')}
                     data-testid="biz-side-tasks"
-                    className="w-[4.5rem] h-[4.5rem] sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-b from-cyber-cyan/15 to-neon-purple/10 border border-cyber-cyan/30 flex flex-col items-center justify-center gap-1 text-cyber-cyan hover:brightness-110 active:scale-95 transition-all"
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-b from-cyber-cyan/15 to-neon-purple/10 border border-cyber-cyan/30 flex flex-col items-center justify-center gap-0.5 text-cyber-cyan hover:brightness-110 active:scale-95 transition-all"
                   >
-                    <Target className="w-6 h-6" />
-                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wide text-center leading-tight">{({ru:'Задания',en:'Tasks',es:'Tareas',zh:'任务',fr:'Tâches',de:'Aufgaben',ja:'タスク',ko:'작업',id:'Tugas'}[lang] || 'Задания')}</span>
+                    <Target className="w-5 h-5" />
+                    <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wide text-center leading-tight">{({ru:'Задания',en:'Tasks',es:'Tareas',zh:'任务',fr:'Tâches',de:'Aufgaben',ja:'タスク',ko:'작업',id:'Tugas'}[lang] || 'Задания')}</span>
                   </button>
                 </div>
 
@@ -1319,7 +1318,7 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                     key={biz.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="group shrink-0 w-full snap-start h-full flex flex-col items-center justify-center gap-3 px-2"
+                    className="group shrink-0 w-full snap-start h-full flex flex-col items-center justify-center gap-3 px-2 pt-10 sm:pt-14"
                     data-testid={biz.tutorial ? 'tutorial-business-card' : `business-card-${biz.id}`}
                   >
                     {/* ── СКИН БИЗНЕСА по центру (без карточки) ────────────── */}
@@ -1442,6 +1441,19 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
               {/* Точки-карусель перенесены в закреплённый нижний блок (над кнопками
                   действий), чтобы были видны всегда и не вытесняли кнопки. */}
                 </div>{/* end center column (карусель + точки) */}
+
+                {/* RIGHT: компактная кнопка МАРКЕТПЛЕЙС */}
+                <div className="flex flex-col gap-2 shrink-0 self-start pt-1">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/marketplace')}
+                    data-testid="biz-side-marketplace"
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-b from-amber-500/15 to-orange-500/10 border border-amber-400/30 flex flex-col items-center justify-center gap-0.5 text-amber-300 hover:brightness-110 active:scale-95 transition-all"
+                  >
+                    <Store className="w-5 h-5" />
+                    <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wide text-center leading-tight">{({ru:'Маркет',en:'Market',es:'Mercado',zh:'市场',fr:'Marché',de:'Markt',ja:'市場',ko:'마켓',id:'Pasar'}[lang] || 'Маркет')}</span>
+                  </button>
+                </div>
               </div>{/* end central block flex row */}
               {/* Нижний ряд действий вынесен из прокрутки и закреплён над нижней
                   навигацией — см. блок после </ScrollArea> ниже. */}
