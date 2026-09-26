@@ -1318,7 +1318,7 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                     key={biz.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="group shrink-0 w-full snap-start h-full flex flex-col items-center justify-center gap-3 px-2 pt-10 sm:pt-14"
+                    className="group shrink-0 w-full snap-start h-full flex flex-col items-center justify-center gap-4 px-2 pt-16 sm:pt-24"
                     data-testid={biz.tutorial ? 'tutorial-business-card' : `business-card-${biz.id}`}
                   >
                     {/* ── СКИН БИЗНЕСА по центру (без карточки) ────────────── */}
@@ -1342,21 +1342,6 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                         <Info className="w-4 h-4" />
                       </Button>
 
-                      {/* Статус (показываем только если бизнес НЕ работает) */}
-                      {_bizStatus !== 'working' && (
-                        <div className="absolute left-1 top-1 z-10">
-                          <Badge data-testid={`work-status-${biz.id}`} className={
-                            _bizStatus === 'on_sale' ? 'bg-amber-500/20 text-amber-400'
-                            : _bizStatus === 'seized' ? 'bg-red-600/30 text-red-300 border border-red-500/40'
-                            : _bizStatus === 'idle' ? 'bg-yellow-500/20 text-yellow-400'
-                            : 'bg-red-500/20 text-red-400'
-                          }>
-                            {_bizStatus === 'on_sale' ? t('onSale')
-                             : _bizStatus === 'seized' ? (t('seizedStatus') || 'For sale (Seized)')
-                             : _bizStatus === 'idle' ? (t('idle') || 'Idle') : t('stopped')}
-                          </Badge>
-                        </div>
-                      )}
                       {/* hidden testid to keep tier/level info reachable for tests */}
                       <span className="sr-only" data-testid={`business-tier-level-${biz.id}`}>
                         {t('tierLabel')} {biz.config?.tier || 1} • {t('levelLabel')} {biz.level ?? 1}
@@ -1366,7 +1351,7 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                         <img
                           src={skinUrl}
                           alt={bizName}
-                          className="max-h-[34vh] h-auto w-auto max-w-[78%] object-contain drop-shadow-[0_18px_40px_rgba(34,211,238,0.35)]"
+                          className="max-h-[34vh] h-auto w-auto max-w-[78%] object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.55)]"
                           loading="lazy"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
@@ -1376,6 +1361,22 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                         />
                       )}
                       <span className="text-7xl leading-none" style={{ display: skinUrl ? 'none' : 'block' }}>{bizIcon}</span>
+                    </div>
+
+                    {/* ── Статус бизнеса ПОД скином ────────────────────────── */}
+                    <div className="flex justify-center shrink-0">
+                      <Badge data-testid={`work-status-${biz.id}`} className={
+                        _bizStatus === 'working' ? 'bg-green-500/20 text-green-400'
+                        : _bizStatus === 'on_sale' ? 'bg-amber-500/20 text-amber-400'
+                        : _bizStatus === 'seized' ? 'bg-red-600/30 text-red-300 border border-red-500/40'
+                        : _bizStatus === 'idle' ? 'bg-yellow-500/20 text-yellow-400'
+                        : 'bg-red-500/20 text-red-400'
+                      }>
+                        {_bizStatus === 'working' ? t('active')
+                         : _bizStatus === 'on_sale' ? t('onSale')
+                         : _bizStatus === 'seized' ? (t('seizedStatus') || 'For sale (Seized)')
+                         : _bizStatus === 'idle' ? (t('idle') || 'Idle') : t('stopped')}
+                      </Badge>
                     </div>
 
                     {/* ── Панели под скином (по центру, ограниченная ширина) ── */}
