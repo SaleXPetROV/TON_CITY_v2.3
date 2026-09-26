@@ -1250,7 +1250,8 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
               </div>
             ) : (
               <>
-              <div className="flex items-stretch gap-2 sm:gap-3 w-[calc(100vw-2rem)] lg:w-full max-w-full overflow-hidden h-full">
+              <div className="flex flex-col w-full h-full min-h-0">
+              <div className="flex items-stretch gap-2 sm:gap-3 w-[calc(100vw-2rem)] lg:w-full max-w-full overflow-hidden flex-1 min-h-0">
                 {/* LEFT: компактная кнопка ЗАДАНИЯ */}
                 <div className="flex flex-col gap-2 shrink-0 self-start pt-1">
                   <button
@@ -1272,33 +1273,11 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                     className="flex gap-4 w-full h-full min-w-0 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide"
                   >
                 {businesses.map((biz) => {
-                  // ── Данные для карточки (редизайн по референсу) ──────────
+                  // ── Данные для скина ─────────────────────────────────────
                   const skinUrl = resolveSkinUrl(skinsIndex, biz.skin_group, biz.business_type, biz.level);
                   const bizName = biz.config?.name?.[lang] || biz.config?.name?.en || biz.config?.name?.ru || tBusiness(biz.business_type, lang);
                   const bizIcon = biz.config?.icon || '🏢';
-                  // Доход в час (как было в карточке: base × прочность × баффы / 24)
-                  const _baseProd = biz.production?.base_production || biz.config?.base_production || 100;
-                  const _dur = biz.durability ?? 100;
-                  const _durMult = _dur <= 0 ? 0 : _dur < 50 ? 0.8 : 1.0;
-                  const _buffMult = biz.production?.user_buff_multiplier || 1.0;
-                  const _hourlyRaw = (_baseProd * _durMult * _buffMult) / 24;
-                  const _hourly = _hourlyRaw < 100 ? Number(_hourlyRaw.toFixed(2)) : Math.round(_hourlyRaw);
-                  // Расход в сутки (первый потребляемый ресурс)
-                  const _consumes = biz.production?.consumption_breakdown || biz.config?.consumes;
-                  const _consumeEntries = !_consumes ? [] : (Array.isArray(_consumes)
-                    ? _consumes.map(c => [c.resource || c.type, c.amount || c.rate || 0])
-                    : Object.entries(_consumes));
-                  const _produceIcon = biz.config?.produces
-                    ? (getResource(biz.config.produces, lang)?.icon || resourceIcons[biz.config.produces] || '📦')
-                    : '📦';
-                  const _consumeIcon = _consumeEntries.length
-                    ? (getResource(_consumeEntries[0][0], lang)?.icon || '📦')
-                    : '📦';
-                  const HOUR_SHORT = { ru: 'ч', en: 'h', es: 'h', zh: '时', fr: 'h', de: 'Std.', ja: '時', ko: '시', id: 'j' };
-                  const DAY_SHORT = { ru: 'сут', en: 'day', es: 'día', zh: '天', fr: 'j', de: 'Tag', ja: '日', ko: '일', id: 'hr' };
-                  const hourShort = HOUR_SHORT[lang] || HOUR_SHORT.ru;
-                  const dayShort = DAY_SHORT[lang] || DAY_SHORT.ru;
-                  // Статус бизнеса (для маленького индикатора над скином)
+                  // Статус бизнеса (для индикатора под скином)
                   let _bizStatus = 'working';
                   if (biz.level === 0 || biz.is_zero_business) {
                     _bizStatus = biz.durability <= 0 ? 'stopped' : (biz.work_status === 'idle' ? 'idle' : 'working');
@@ -1318,7 +1297,7 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                     key={biz.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="group shrink-0 w-full snap-start h-full flex flex-col items-center justify-center gap-4 px-2 pt-16 sm:pt-24"
+                    className="group shrink-0 w-full snap-start h-full flex flex-col items-center justify-center gap-3 px-2 pt-6"
                     data-testid={biz.tutorial ? 'tutorial-business-card' : `business-card-${biz.id}`}
                   >
                     {/* ── СКИН БИЗНЕСА по центру (без карточки) ────────────── */}
@@ -1378,63 +1357,6 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                          : _bizStatus === 'idle' ? (t('idle') || 'Idle') : t('stopped')}
                       </Badge>
                     </div>
-
-                    {/* ── Панели под скином (по центру, ограниченная ширина) ── */}
-                    <div className="w-full max-w-[22rem] mx-auto flex flex-col gap-2 shrink-0">
-                      {/* Прочность */}
-                      <div className="rounded-2xl bg-black/40 border border-cyber-cyan/30 shadow-[0_0_18px_rgba(34,211,238,0.12)] px-4 py-2.5">
-                        <div className="flex justify-between items-center mb-1.5">
-                          <span className="text-white/80 flex items-center gap-2 font-semibold text-base">
-                            <Wrench className="w-5 h-5 text-cyber-cyan" /> {t('durabilityLabel')}:
-                          </span>
-                          <span className={`font-extrabold text-lg ${biz.durability < 30 ? 'text-red-400' : 'text-white'}`} data-testid={`durability-value-${biz.id}`}>
-                            {(biz.durability ?? 100).toFixed(1)}%
-                          </span>
-                        </div>
-                        <Progress value={biz.durability ?? 100} className="h-2.5" />
-                        {biz.durability < 30 && (
-                          <div className="flex items-center gap-1 text-red-400 text-xs mt-1.5">
-                            <AlertCircle className="w-3 h-3" />
-                            {t('needsRepair')}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Склад */}
-                      {biz.storage_info && biz.storage_info.capacity > 0 && (
-                        <div className="rounded-2xl bg-black/40 border border-cyber-cyan/30 shadow-[0_0_18px_rgba(34,211,238,0.12)] px-4 py-3 flex items-center justify-center gap-2.5" data-testid={`storage-panel-${biz.id}`}>
-                          <Package className="w-6 h-6 text-amber-400 shrink-0" />
-                          <span className="text-white font-extrabold text-lg uppercase tracking-wide">
-                            {t('warehouseLabel')}: {biz.storage_info.used}/{biz.storage_info.capacity}
-                          </span>
-                        </div>
-                      )}
-                      {biz.storage_info?.is_full && (
-                        <div className="text-red-400 text-xs flex items-center gap-1 justify-center">
-                          <AlertCircle className="w-3 h-3" />
-                          {t('warehouseFullMsg')}
-                        </div>
-                      )}
-
-                      {/* Чипы дохода/расхода */}
-                      <div className="flex gap-2">
-                        <div className="flex-1 min-w-0 rounded-2xl bg-black/40 border border-green-400/30 shadow-[0_0_14px_rgba(74,222,128,0.12)] px-3 py-2.5 flex items-center justify-center gap-2" data-testid={`income-chip-${biz.id}`}>
-                          <span className="text-lg leading-none">{_produceIcon}</span>
-                          <span className="text-green-400 font-extrabold text-base whitespace-nowrap">+{_hourly}/{hourShort}</span>
-                        </div>
-                        {_consumeEntries.length > 0 && (
-                          <div className="flex-1 min-w-0 rounded-2xl bg-black/40 border border-sky-400/30 shadow-[0_0_14px_rgba(56,189,248,0.12)] px-3 py-2.5 flex items-center justify-center gap-2" data-testid={`expense-chip-${biz.id}`}>
-                            <span className="text-lg leading-none">{_consumeIcon}</span>
-                            <span className="text-sky-400 font-extrabold text-base whitespace-nowrap">−{_consumeEntries[0][1]}/{dayShort}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Level-0 lease countdown */}
-                      {biz.level === 0 && biz.expires_at && (
-                        <ZeroLeaseTimer expiresAt={biz.expires_at} t={t} />
-                      )}
-                    </div>
                   </motion.div>
                   );
                 })}
@@ -1456,6 +1378,91 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                   </button>
                 </div>
               </div>{/* end central block flex row */}
+
+              {/* ── ФИКСИРОВАННЫЕ панели активного бизнеса (НЕ перелистываются,
+                     обновляются под активный скин; на 30% шире прежних) ── */}
+              {(() => {
+                const abiz = businesses[activeBizIndex] || businesses[0];
+                if (!abiz) return null;
+                const _baseProd = abiz.production?.base_production || abiz.config?.base_production || 100;
+                const _dur = abiz.durability ?? 100;
+                const _durMult = _dur <= 0 ? 0 : _dur < 50 ? 0.8 : 1.0;
+                const _buffMult = abiz.production?.user_buff_multiplier || 1.0;
+                const _hourlyRaw = (_baseProd * _durMult * _buffMult) / 24;
+                const _hourly = _hourlyRaw < 100 ? Number(_hourlyRaw.toFixed(2)) : Math.round(_hourlyRaw);
+                const _consumes = abiz.production?.consumption_breakdown || abiz.config?.consumes;
+                const _consumeEntries = !_consumes ? [] : (Array.isArray(_consumes)
+                  ? _consumes.map(c => [c.resource || c.type, c.amount || c.rate || 0])
+                  : Object.entries(_consumes));
+                const _produceIcon = abiz.config?.produces
+                  ? (getResource(abiz.config.produces, lang)?.icon || resourceIcons[abiz.config.produces] || '📦')
+                  : '📦';
+                const _consumeIcon = _consumeEntries.length
+                  ? (getResource(_consumeEntries[0][0], lang)?.icon || '📦')
+                  : '📦';
+                const HOUR_SHORT = { ru: 'ч', en: 'h', es: 'h', zh: '时', fr: 'h', de: 'Std.', ja: '時', ko: '시', id: 'j' };
+                const DAY_SHORT = { ru: 'сут', en: 'day', es: 'día', zh: '天', fr: 'j', de: 'Tag', ja: '日', ko: '일', id: 'hr' };
+                const hourShort = HOUR_SHORT[lang] || HOUR_SHORT.ru;
+                const dayShort = DAY_SHORT[lang] || DAY_SHORT.ru;
+                return (
+                  <div className="w-full max-w-[29rem] mx-auto flex flex-col gap-2 shrink-0 px-2 pb-1" data-testid="biz-fixed-panels">
+                    {/* Прочность */}
+                    <div className="rounded-2xl bg-black/40 border border-cyber-cyan/30 shadow-[0_0_18px_rgba(34,211,238,0.12)] px-4 py-2.5">
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-white/80 flex items-center gap-2 font-semibold text-base">
+                          <Wrench className="w-5 h-5 text-cyber-cyan" /> {t('durabilityLabel')}:
+                        </span>
+                        <span className={`font-extrabold text-lg ${abiz.durability < 30 ? 'text-red-400' : 'text-white'}`} data-testid={`durability-value-${abiz.id}`}>
+                          {(abiz.durability ?? 100).toFixed(1)}%
+                        </span>
+                      </div>
+                      <Progress value={abiz.durability ?? 100} className="h-2.5" />
+                      {abiz.durability < 30 && (
+                        <div className="flex items-center gap-1 text-red-400 text-xs mt-1.5">
+                          <AlertCircle className="w-3 h-3" />
+                          {t('needsRepair')}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Склад */}
+                    {abiz.storage_info && abiz.storage_info.capacity > 0 && (
+                      <div className="rounded-2xl bg-black/40 border border-cyber-cyan/30 shadow-[0_0_18px_rgba(34,211,238,0.12)] px-4 py-3 flex items-center justify-center gap-2.5" data-testid={`storage-panel-${abiz.id}`}>
+                        <Package className="w-6 h-6 text-amber-400 shrink-0" />
+                        <span className="text-white font-extrabold text-lg uppercase tracking-wide">
+                          {t('warehouseLabel')}: {abiz.storage_info.used}/{abiz.storage_info.capacity}
+                        </span>
+                      </div>
+                    )}
+                    {abiz.storage_info?.is_full && (
+                      <div className="text-red-400 text-xs flex items-center gap-1 justify-center">
+                        <AlertCircle className="w-3 h-3" />
+                        {t('warehouseFullMsg')}
+                      </div>
+                    )}
+
+                    {/* Чипы дохода/расхода */}
+                    <div className="flex gap-2">
+                      <div className="flex-1 min-w-0 rounded-2xl bg-black/40 border border-green-400/30 shadow-[0_0_14px_rgba(74,222,128,0.12)] px-3 py-2.5 flex items-center justify-center gap-2" data-testid={`income-chip-${abiz.id}`}>
+                        <span className="text-lg leading-none">{_produceIcon}</span>
+                        <span className="text-green-400 font-extrabold text-base whitespace-nowrap">+{_hourly}/{hourShort}</span>
+                      </div>
+                      {_consumeEntries.length > 0 && (
+                        <div className="flex-1 min-w-0 rounded-2xl bg-black/40 border border-sky-400/30 shadow-[0_0_14px_rgba(56,189,248,0.12)] px-3 py-2.5 flex items-center justify-center gap-2" data-testid={`expense-chip-${abiz.id}`}>
+                          <span className="text-lg leading-none">{_consumeIcon}</span>
+                          <span className="text-sky-400 font-extrabold text-base whitespace-nowrap">−{_consumeEntries[0][1]}/{dayShort}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Level-0 lease countdown */}
+                    {abiz.level === 0 && abiz.expires_at && (
+                      <ZeroLeaseTimer expiresAt={abiz.expires_at} t={t} />
+                    )}
+                  </div>
+                );
+              })()}
+              </div>{/* end flex-col wrapper (карусель + фикс. панели) */}
               {/* Нижний ряд действий вынесен из прокрутки и закреплён над нижней
                   навигацией — см. блок после </ScrollArea> ниже. */}
               </>
