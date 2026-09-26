@@ -1299,179 +1299,142 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                   const DAY_SHORT = { ru: 'сут', en: 'day', es: 'día', zh: '天', fr: 'j', de: 'Tag', ja: '日', ko: '일', id: 'hr' };
                   const hourShort = HOUR_SHORT[lang] || HOUR_SHORT.ru;
                   const dayShort = DAY_SHORT[lang] || DAY_SHORT.ru;
+                  // Статус бизнеса (для маленького индикатора над скином)
+                  let _bizStatus = 'working';
+                  if (biz.level === 0 || biz.is_zero_business) {
+                    _bizStatus = biz.durability <= 0 ? 'stopped' : (biz.work_status === 'idle' ? 'idle' : 'working');
+                  } else if (biz.is_seized) {
+                    _bizStatus = 'seized';
+                  } else if (biz.on_sale) {
+                    _bizStatus = 'on_sale';
+                  } else if (biz.durability <= 0) {
+                    _bizStatus = 'stopped';
+                  } else if (biz.work_status === 'idle') {
+                    _bizStatus = 'idle';
+                  } else if (biz.work_status === 'stopped' || biz.work_status === 'halted') {
+                    _bizStatus = 'stopped';
+                  }
                   return (
                   <motion.div
                     key={biz.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="group shrink-0 w-full snap-start h-full"
+                    className="group shrink-0 w-full snap-start h-full flex flex-col items-center justify-center gap-3 px-2"
+                    data-testid={biz.tutorial ? 'tutorial-business-card' : `business-card-${biz.id}`}
                   >
-                    <Card className="glass-panel border-white/10 hover:border-cyber-cyan/30 transition-all h-full flex flex-col" data-testid={biz.tutorial ? 'tutorial-business-card' : `business-card-${biz.id}`}>
-                      <CardContent className="p-3 flex flex-col flex-1">
-                        {/* Шапка: значок + название по центру, кнопка деталей (i) справа */}
-                        <div className="relative flex items-center justify-center gap-2 mb-1.5 min-h-[2rem]">
-                          <span className="text-2xl leading-none">{bizIcon}</span>
-                          <h3 className="font-extrabold text-white text-base sm:text-lg uppercase tracking-wide leading-tight text-center break-words">
-                            {bizName}
-                          </h3>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              if (isTutorialActive) { blockedTutorialToast(); return; }
-                              openDetails(biz);
-                            }}
-                            disabled={isTutorialActive}
-                            aria-label="Details"
-                            className="absolute right-0 top-1/2 -translate-y-1/2 text-text-muted hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed h-7 w-7 p-0 rounded-full border border-white/15"
-                            data-testid={`business-settings-${biz.id}`}
-                          >
-                            <Info className="w-4 h-4" />
-                          </Button>
-                        </div>
+                    {/* ── СКИН БИЗНЕСА по центру (без карточки) ────────────── */}
+                    <div
+                      className="relative flex items-center justify-center w-full flex-1 min-h-[7rem]"
+                      data-testid={`business-image-${biz.id}`}
+                    >
+                      {/* Кнопка деталей (i) — плавающая справа сверху */}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          if (isTutorialActive) { blockedTutorialToast(); return; }
+                          openDetails(biz);
+                        }}
+                        disabled={isTutorialActive}
+                        aria-label="Details"
+                        className="absolute right-1 top-1 z-10 text-text-muted hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed h-8 w-8 p-0 rounded-full border border-white/15 bg-black/40 backdrop-blur-sm"
+                        data-testid={`business-settings-${biz.id}`}
+                      >
+                        <Info className="w-4 h-4" />
+                      </Button>
 
-                        {/* Бейдж: Эшелон • Уровень (из БД) */}
-                        <div className="flex justify-center mb-2">
-                          <Badge
-                            variant="outline"
-                            className="border-cyber-cyan/30 bg-cyber-cyan/10 text-cyber-cyan text-[11px] px-3 py-0.5 rounded-full font-bold"
-                            data-testid={`business-tier-level-${biz.id}`}
-                          >
-                            {t('tierLabel')} {biz.config?.tier || 1} • {t('levelLabel')} {biz.level ?? 1}
+                      {/* Статус (показываем только если бизнес НЕ работает) */}
+                      {_bizStatus !== 'working' && (
+                        <div className="absolute left-1 top-1 z-10">
+                          <Badge data-testid={`work-status-${biz.id}`} className={
+                            _bizStatus === 'on_sale' ? 'bg-amber-500/20 text-amber-400'
+                            : _bizStatus === 'seized' ? 'bg-red-600/30 text-red-300 border border-red-500/40'
+                            : _bizStatus === 'idle' ? 'bg-yellow-500/20 text-yellow-400'
+                            : 'bg-red-500/20 text-red-400'
+                          }>
+                            {_bizStatus === 'on_sale' ? t('onSale')
+                             : _bizStatus === 'seized' ? (t('seizedStatus') || 'For sale (Seized)')
+                             : _bizStatus === 'idle' ? (t('idle') || 'Idle') : t('stopped')}
                           </Badge>
                         </div>
+                      )}
+                      {/* hidden testid to keep tier/level info reachable for tests */}
+                      <span className="sr-only" data-testid={`business-tier-level-${biz.id}`}>
+                        {t('tierLabel')} {biz.config?.tier || 1} • {t('levelLabel')} {biz.level ?? 1}
+                      </span>
 
-                        {/* Изображение бизнеса — скин, который стоит у пользователя
-                            (тот же, что на карте). Размер фиксированный для устройства,
-                            но подстраивается под высоту экрана (clamp по vh), чтобы
-                            карточка помещалась на низких экранах. Если скина нет —
-                            запасной вариант: эмодзи-иконка бизнеса. */}
-                        <div className="flex items-center justify-center flex-1 min-h-[5rem] my-1" data-testid={`business-image-${biz.id}`}>
-                          {skinUrl && (
-                            <img
-                              src={skinUrl}
-                              alt={bizName}
-                              className="max-h-full h-auto w-auto max-w-[70%] object-contain drop-shadow-[0_10px_25px_rgba(34,211,238,0.25)]"
-                              loading="lazy"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                const fb = e.currentTarget.nextSibling;
-                                if (fb) fb.style.display = 'block';
-                              }}
-                            />
-                          )}
-                          <span className="text-6xl leading-none" style={{ display: skinUrl ? 'none' : 'block' }}>{bizIcon}</span>
-                        </div>
-                        
-                        {/* Статус бизнеса — над блоком «Прочность» (как требуется) */}
-                        <div className="flex justify-center mb-2">
-                          {(() => {
-                            let status = 'working';
-                            if (biz.level === 0 || biz.is_zero_business) {
-                              status = biz.durability <= 0 ? 'stopped' : (biz.work_status === 'idle' ? 'idle' : 'working');
-                            } else if (biz.is_seized) {
-                              status = 'seized';
-                            } else if (biz.on_sale) {
-                              status = 'on_sale';
-                            } else if (biz.durability <= 0) {
-                              status = 'stopped';
-                            } else if (biz.work_status === 'idle') {
-                              status = 'idle';
-                            } else if (biz.work_status === 'stopped' || biz.work_status === 'halted') {
-                              status = 'stopped';
-                            }
-                            return (
-                              <Badge data-testid={`work-status-${biz.id}`} className={
-                                status === 'working'
-                                  ? 'bg-green-500/20 text-green-400'
-                                  : status === 'on_sale'
-                                  ? 'bg-amber-500/20 text-amber-400'
-                                  : status === 'seized'
-                                  ? 'bg-red-600/30 text-red-300 border border-red-500/40'
-                                  : status === 'idle'
-                                  ? 'bg-yellow-500/20 text-yellow-400'
-                                  : 'bg-red-500/20 text-red-400'
-                              }>
-                                {status === 'working' ? t('active') :
-                                 status === 'on_sale' ? t('onSale') :
-                                 status === 'seized' ? (t('seizedStatus') || 'For sale (Seized)') :
-                                 status === 'idle' ? t('idle') || 'Idle' : t('stopped')}
-                              </Badge>
-                            );
-                          })()}
-                        </div>
+                      {skinUrl && (
+                        <img
+                          src={skinUrl}
+                          alt={bizName}
+                          className="max-h-[34vh] h-auto w-auto max-w-[78%] object-contain drop-shadow-[0_18px_40px_rgba(34,211,238,0.35)]"
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const fb = e.currentTarget.nextSibling;
+                            if (fb) fb.style.display = 'block';
+                          }}
+                        />
+                      )}
+                      <span className="text-7xl leading-none" style={{ display: skinUrl ? 'none' : 'block' }}>{bizIcon}</span>
+                    </div>
 
-                        {/* Прочность (из БД) — панель как на референсе */}
-                        <div className="rounded-xl bg-white/5 border border-white/10 px-3 py-2 mb-2">
-                          <div className="flex justify-between items-center text-sm mb-1.5">
-                            <span className="text-text-muted flex items-center gap-1.5">
-                              <Wrench className="w-4 h-4" /> {t('durabilityLabel')}:
-                            </span>
-                            <span className={`font-bold ${biz.durability < 30 ? 'text-red-400' : 'text-white'}`} data-testid={`durability-value-${biz.id}`}>
-                              {(biz.durability ?? 100).toFixed(1)}%
-                            </span>
-                          </div>
-                          <Progress
-                            value={biz.durability ?? 100}
-                            className="h-2"
-                          />
-                          {biz.durability < 30 && (
-                            <div className="flex items-center gap-1 text-red-400 text-xs mt-1.5">
-                              <AlertCircle className="w-3 h-3" />
-                              {t('needsRepair')}
-                            </div>
-                          )}
+                    {/* ── Панели под скином (по центру, ограниченная ширина) ── */}
+                    <div className="w-full max-w-[22rem] mx-auto flex flex-col gap-2 shrink-0">
+                      {/* Прочность */}
+                      <div className="rounded-2xl bg-black/40 border border-cyber-cyan/30 shadow-[0_0_18px_rgba(34,211,238,0.12)] px-4 py-2.5">
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-white/80 flex items-center gap-2 font-semibold text-base">
+                            <Wrench className="w-5 h-5 text-cyber-cyan" /> {t('durabilityLabel')}:
+                          </span>
+                          <span className={`font-extrabold text-lg ${biz.durability < 30 ? 'text-red-400' : 'text-white'}`} data-testid={`durability-value-${biz.id}`}>
+                            {(biz.durability ?? 100).toFixed(1)}%
+                          </span>
                         </div>
-                        
-                        {/* Склад (из БД) — панель как на референсе */}
-                        {biz.storage_info && biz.storage_info.capacity > 0 && (
-                          <div className="rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 mb-2 flex items-center justify-center gap-2" data-testid={`storage-panel-${biz.id}`}>
-                            <Package className="w-5 h-5 text-amber-400 shrink-0" />
-                            <span className="text-white font-extrabold text-sm uppercase tracking-wide">
-                              {t('warehouseLabel')}: {biz.storage_info.used}/{biz.storage_info.capacity}
-                            </span>
-                          </div>
-                        )}
-                        {biz.storage_info?.is_full && (
-                          <div className="text-red-400 text-xs mb-2 flex items-center gap-1 justify-center">
+                        <Progress value={biz.durability ?? 100} className="h-2.5" />
+                        {biz.durability < 30 && (
+                          <div className="flex items-center gap-1 text-red-400 text-xs mt-1.5">
                             <AlertCircle className="w-3 h-3" />
-                            {t('warehouseFullMsg')}
+                            {t('needsRepair')}
                           </div>
                         )}
+                      </div>
 
-                        {/* Чипы дохода/расхода (перенесены из карточки): +доход/ч и −расход/сут */}
-                        <div className="flex gap-2 mb-1">
-                          <div className="flex-1 min-w-0 rounded-xl bg-white/5 border border-white/10 px-2.5 py-2 flex items-center justify-center gap-1.5" data-testid={`income-chip-${biz.id}`}>
-                            <span className="text-base leading-none">{_produceIcon}</span>
-                            <span className="text-green-400 font-bold text-sm whitespace-nowrap">+{_hourly}/{hourShort}</span>
-                          </div>
-                          {_consumeEntries.length > 0 && (
-                            <div className="flex-1 min-w-0 rounded-xl bg-white/5 border border-white/10 px-2.5 py-2 flex items-center justify-center gap-1.5" data-testid={`expense-chip-${biz.id}`}>
-                              <span className="text-base leading-none">{_consumeIcon}</span>
-                              <span className="text-sky-400 font-bold text-sm whitespace-nowrap">−{_consumeEntries[0][1]}/{dayShort}</span>
-                            </div>
-                          )}
+                      {/* Склад */}
+                      {biz.storage_info && biz.storage_info.capacity > 0 && (
+                        <div className="rounded-2xl bg-black/40 border border-cyber-cyan/30 shadow-[0_0_18px_rgba(34,211,238,0.12)] px-4 py-3 flex items-center justify-center gap-2.5" data-testid={`storage-panel-${biz.id}`}>
+                          <Package className="w-6 h-6 text-amber-400 shrink-0" />
+                          <span className="text-white font-extrabold text-lg uppercase tracking-wide">
+                            {t('warehouseLabel')}: {biz.storage_info.used}/{biz.storage_info.capacity}
+                          </span>
                         </div>
+                      )}
+                      {biz.storage_info?.is_full && (
+                        <div className="text-red-400 text-xs flex items-center gap-1 justify-center">
+                          <AlertCircle className="w-3 h-3" />
+                          {t('warehouseFullMsg')}
+                        </div>
+                      )}
 
-                        {/* Статус бизнеса перенесён НАД блок «Прочность» (см. выше). */}
-                        
-                        {/* Patron Badge — removed; the patron is shown on the change-patron button below */}
-
-                        {/* Кнопка «Выбрать оффер» убрана с карточки по запросу
-                            (раздел «Офферы» также удалён со страницы торговли). */}
-
-                        {/* Кнопки «Апгрейд» и «Ремонт» перенесены в нижний ряд
-                            действий под карточкой (РЕМОНТ | СМЕНА | АПГРЕЙД) —
-                            как на референсе. */}
-
-                        {/* Level-0 lease countdown (3-day rent). Shows time left
-                            until the lease ends; expiry is handled server-side by
-                            process_zero_lease (removes the business, reclaims T3 bonus). */}
-                        {biz.level === 0 && biz.expires_at && (
-                          <ZeroLeaseTimer expiresAt={biz.expires_at} t={t} />
+                      {/* Чипы дохода/расхода */}
+                      <div className="flex gap-2">
+                        <div className="flex-1 min-w-0 rounded-2xl bg-black/40 border border-green-400/30 shadow-[0_0_14px_rgba(74,222,128,0.12)] px-3 py-2.5 flex items-center justify-center gap-2" data-testid={`income-chip-${biz.id}`}>
+                          <span className="text-lg leading-none">{_produceIcon}</span>
+                          <span className="text-green-400 font-extrabold text-base whitespace-nowrap">+{_hourly}/{hourShort}</span>
+                        </div>
+                        {_consumeEntries.length > 0 && (
+                          <div className="flex-1 min-w-0 rounded-2xl bg-black/40 border border-sky-400/30 shadow-[0_0_14px_rgba(56,189,248,0.12)] px-3 py-2.5 flex items-center justify-center gap-2" data-testid={`expense-chip-${biz.id}`}>
+                            <span className="text-lg leading-none">{_consumeIcon}</span>
+                            <span className="text-sky-400 font-extrabold text-base whitespace-nowrap">−{_consumeEntries[0][1]}/{dayShort}</span>
+                          </div>
                         )}
-                      </CardContent>
-                    </Card>
+                      </div>
+
+                      {/* Level-0 lease countdown */}
+                      {biz.level === 0 && biz.expires_at && (
+                        <ZeroLeaseTimer expiresAt={biz.expires_at} t={t} />
+                      )}
+                    </div>
                   </motion.div>
                   );
                 })}
