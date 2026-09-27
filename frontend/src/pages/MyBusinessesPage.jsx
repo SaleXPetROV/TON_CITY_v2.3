@@ -1285,7 +1285,7 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                       }}
                       disabled={isTutorialActive}
                       aria-label={bizName}
-                      className="relative flex items-center justify-center w-full flex-1 min-h-0 focus:outline-none active:scale-[0.98] transition-transform disabled:cursor-not-allowed"
+                      className="relative flex items-center justify-center w-full flex-1 min-h-0 overflow-hidden focus:outline-none active:scale-[0.98] transition-transform disabled:cursor-not-allowed"
                       data-testid={`business-image-${biz.id}`}
                     >
                       {/* hidden testid to keep tier/level info reachable for tests */}
