@@ -1205,17 +1205,21 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                   </button>
                 </div>
 
-                {/* CENTER: «Открыть бизнес» — заменяет название/арт/статус,
-                    ведёт на карту (/maps) */}
-                <button
-                  type="button"
-                  onClick={() => navigate('/maps')}
-                  data-testid="acquire-business-btn"
-                  className="flex-1 min-w-0 basis-0 self-stretch min-h-0 rounded-2xl bg-gradient-to-br from-cyber-cyan/15 to-neon-purple/15 border border-cyber-cyan/30 flex flex-col items-center justify-center gap-3 text-white hover:brightness-110 active:scale-[0.99] transition-all"
-                >
-                  <Building2 className="w-12 h-12 text-cyber-cyan" />
-                  <span className="text-base font-extrabold uppercase tracking-wide text-center px-3">{({ru:'Открыть бизнес',en:'Open business',es:'Abrir negocio',zh:'开设企业',fr:'Ouvrir un business',de:'Business eröffnen',ja:'ビジネスを開く',ko:'사업 열기',id:'Buka bisnis'}[lang] || 'Открыть бизнес')}</span>
-                </button>
+                {/* CENTER: «Открыть бизнес» — компактная светящаяся кнопка,
+                    заменяет название/арт/статус, ведёт на карту (/maps) */}
+                <div className="flex-1 min-w-0 basis-0 self-stretch min-h-0 flex items-center justify-center px-2">
+                  <div className="biz-open-glow rounded-3xl">
+                    <button
+                      type="button"
+                      onClick={() => navigate('/maps')}
+                      data-testid="acquire-business-btn"
+                      className="w-[min(58vw,190px)] rounded-3xl bg-gradient-to-br from-cyber-cyan/20 to-neon-purple/20 border border-cyber-cyan/50 flex flex-col items-center justify-center gap-2.5 py-6 px-4 text-white hover:brightness-125 active:scale-95 transition-all"
+                    >
+                      <Building2 className="w-9 h-9 text-cyber-cyan" />
+                      <span className="text-sm font-extrabold uppercase tracking-wide text-center leading-tight">{({ru:'Открыть бизнес',en:'Open business',es:'Abrir negocio',zh:'开设企业',fr:'Ouvrir un business',de:'Business eröffnen',ja:'ビジネスを開く',ko:'사업 열기',id:'Buka bisnis'}[lang] || 'Открыть бизнес')}</span>
+                    </button>
+                  </div>
+                </div>
 
                 {/* RIGHT: компактная кнопка МАРКЕТПЛЕЙС */}
                 <div className="flex flex-col gap-2 shrink-0 self-start pt-1">
