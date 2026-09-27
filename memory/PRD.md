@@ -1,32 +1,32 @@
-# TON CITY v2.3 — PRD
+# TON_CITY v2.3 — PRD / Work Log
 
-## Проект
-Игра-градостроитель на TON (React + FastAPI + MongoDB). Репозиторий клонирован из
-https://github.com/SaleXPetROV/TON_CITY_v2.3 и запущен в окружении Emergent.
+## Source
+Cloned from https://github.com/SaleXPetROV/TON_CITY_v2.3.git into /app.
+Stack: React 19 (CRA/craco) + FastAPI + MongoDB. Telegram WebApp mobile game.
+Backend entry: server.py (uvicorn server:app @8001). Frontend @3000 (supervisor).
 
-## Тестовые пользователи (скрипт: backend/seed_users.py — запуск вручную, НЕ авто при деплое)
-- Админ: sanyanazarov212@gmail.com / Qetuyrwioo (superadmin)
-- Пользователь: testuser@example.com / Test1234!
-Доп. тестовые бизнесы: backend/seed_test_businesses.py (вручную, dev-only).
+## Test users (seeded)
+- Admin:   sanyanazarov212@gmail.com / Qetuyrwioo  (is_admin=true)
+- Regular: testuser@example.com     / Test1234!
+- Seed:    `cd /app/backend && python -m scripts.seed_test_users`
+- Each user has 1 `bio_farm` business: `python -m scripts.seed_test_business`
+- Both have resource neuro_core:2 -> "System Overclock" buff (shown in modal).
 
-## Реализовано (2026-06)
-Редизайн мобильной/планшетной версии:
-1. Навбар: Карта / Ресурсы / Бизнесы / Торговля / Общение(в разработке, серый, тост).
-2. Страница /resources — количество бизнесов, склад, «Мои ресурсы» (перенесено со стр. Бизнесы).
-3. Стр. Бизнесы: убран заголовок; новая шапка профиля (аватар, @username, альянс, баланс $CITY |
-   рефералы, колокольчик, бургер-меню [История, Маркетплейс, Рейтинг, Настройки, Помощь, Правила,
-   Дорожная карта], City Pass — заблокирован, прогресс 0, тост «в разработке»).
-4. Центральный блок: карточка бизнеса по центру (карусель), слева «Акции»→/marketplace,
-   справа «Задания»→/tasks; под каждой карточкой кнопка «Начать смену (8 ч)» с обратным отсчётом.
-5. Бэкенд смен (8 ч): POST /api/business/{id}/start-shift; /api/my/businesses отдаёт shift_active,
-   shift_ends_at, shift_remaining_seconds. Пока смена не активна — бизнес «простаивает» и НЕ теряет
-   прочность (гейт в economic tick и apply_global_durability_wear).
-6. «В разработке» переводится через /api/i18n/dev-notice (LibreTranslate → фолбэк Emergent LLM).
+## Task (Business screen = /my-businesses = MyBusinessesPage.jsx)
+Adaptive, no-scroll layout for any screen height/width (short Android -> tall iPhone).
 
-## Статус
-Протестировано testing-агентом: backend 100%, frontend 100%, блокеров нет.
+### Implemented (2026-06)
+- Root `.app-screen` = `flex h-[100dvh]`; main column `flex flex-col
+  justify-between` + `pb-[calc(68px+env(safe-area-inset-bottom))]` (safe-area).
+- Header (BusinessProfileHeader) wrapped shrink-0 (data-testid=biz-header).
+- Central section flex-1, vertically centered, fluid gaps clamp(4-16px).
+- Business art `.biz-skin-img`: `max-height: min(100%, <vh>)` so it fits its
+  flex box (never overlaps title/status) + width>400 bigger, height<750 smaller.
+- Footer (durability/warehouse/income chips + Repair/Start-shift/Upgrade) is
+  shrink-0 and pinned; bottom tab-bar (BottomNav) fixed w/ safe-area.
+- ACTIVE BUFFS banner MOVED from page into the Business-details modal.
+- Business title nudged lower (mt clamp).
+- Verified by testing_agent iteration_1 (layout) + iteration_2 (overlap) = 100%.
 
-## Бэклог / далее
-- P2: страница «Общение» (сейчас заглушка «в разработке»).
-- P2: интеграция реальных «Акций»/промо в боковой блок вместо перехода на /marketplace.
-- P2: рефакторинг MyBusinessesPage.jsx (>2000 строк) на подкомпоненты.
+## Backlog / Next
+- MyBusinessesPage.jsx is 2400+ lines — could split modal/header/footer components.
