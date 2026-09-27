@@ -44,3 +44,11 @@ Adaptive, no-scroll layout for any screen height/width (short Android -> tall iP
 - Verified: testing_agent iteration_3 (skins/title/swipe/data/dots/breathing) &
   iteration_4 (title level + empty state) = 100%.
 - Extra QA account: emptyuser@example.com / Test1234! (no business).
+
+## Iteration 3 (2026-06) — Empty-state redesign
+- No-business Business screen now mirrors the full layout: center shows a COMPACT
+  GLOWING 'Открыть бизнес' button (data-testid='acquire-business-btn', .biz-open-glow
+  animated glow) -> navigates to /maps; side buttons biz-side-tasks/biz-side-marketplace kept.
+- Lower panels always render; empty placeholders: Durability 0.0%, Warehouse '— / —',
+  income chip 0, expense chip 0 (data-testid suffix 'empty'). No action buttons when empty.
+- Verified by testing_agent iteration_5 = 100%.
