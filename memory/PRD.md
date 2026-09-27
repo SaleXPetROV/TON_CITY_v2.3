@@ -30,3 +30,17 @@ Adaptive, no-scroll layout for any screen height/width (short Android -> tall iP
 
 ## Backlog / Next
 - MyBusinessesPage.jsx is 2400+ lines — could split modal/header/footer components.
+
+## Iteration 2 (2026-06) — Business screen polish
+- Skins bug FIXED: routes/skins.py now alias-aware (SKIN_TYPE_ALIASES) so admin
+  skins stored under e.g. `signal` show for `signal_tower` in /skins/my + /skins/apply.
+- Active business title is a single centered heading on the SAME top line as the
+  ЗАДАНИЯ/МАРКЕТ side buttons (data-testid='active-business-name'), animates on swipe.
+- Production/consumption now use backend-authoritative `production` object
+  (production/24 per hour, consumption_breakdown per day) — removed buggy client recompute.
+- Panels (biz-fixed-panels) wrapped in keyed motion.div -> refresh animation on swipe.
+- Business art has subtle breathing animation (.biz-art-float).
+- Empty state (no business): center button 'Открыть бизнес' (acquire-business-btn) -> /maps.
+- Verified: testing_agent iteration_3 (skins/title/swipe/data/dots/breathing) &
+  iteration_4 (title level + empty state) = 100%.
+- Extra QA account: emptyuser@example.com / Test1234! (no business).

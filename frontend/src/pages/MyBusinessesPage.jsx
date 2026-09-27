@@ -1191,30 +1191,44 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                 tutorial is running and only appears once onboarding is done. */}
             <div className="flex-1 flex min-h-0 w-full" data-testid="biz-central-wrap">
             {businesses.length === 0 ? (
-              <div className="flex items-stretch gap-2 sm:gap-3 w-[calc(100vw-2rem)] lg:w-full max-w-full overflow-hidden">
-                {/* LEFT: кнопка ЗАДАНИЯ */}
-                <div className="flex flex-col gap-2 shrink-0 self-start">
+              <div className="flex items-stretch gap-2 sm:gap-3 w-[calc(100vw-2rem)] lg:w-full max-w-full overflow-hidden flex-1 min-h-0">
+                {/* LEFT: компактная кнопка ЗАДАНИЯ */}
+                <div className="flex flex-col gap-2 shrink-0 self-start pt-1">
                   <button
                     type="button"
                     onClick={() => navigate('/tasks')}
                     data-testid="biz-side-tasks"
-                    className="w-[4.5rem] h-[4.5rem] sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-b from-cyber-cyan/15 to-neon-purple/10 border border-cyber-cyan/30 flex flex-col items-center justify-center gap-1 text-cyber-cyan hover:brightness-110 active:scale-95 transition-all"
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-b from-cyber-cyan/15 to-neon-purple/10 border border-cyber-cyan/30 flex flex-col items-center justify-center gap-0.5 text-cyber-cyan hover:brightness-110 active:scale-95 transition-all"
                   >
-                    <Target className="w-6 h-6" />
-                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wide text-center leading-tight">{({ru:'Задания',en:'Tasks',es:'Tareas',zh:'任务',fr:'Tâches',de:'Aufgaben',ja:'タスク',ko:'작업',id:'Tugas'}[lang] || 'Задания')}</span>
+                    <Target className="w-5 h-5" />
+                    <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wide text-center leading-tight">{({ru:'Задания',en:'Tasks',es:'Tareas',zh:'任务',fr:'Tâches',de:'Aufgaben',ja:'タスク',ko:'작업',id:'Tugas'}[lang] || 'Задания')}</span>
                   </button>
                 </div>
 
-                {/* CENTER: acquire business */}
+                {/* CENTER: «Открыть бизнес» — заменяет название/арт/статус,
+                    ведёт на карту (/maps) */}
                 <button
                   type="button"
                   onClick={() => navigate('/maps')}
                   data-testid="acquire-business-btn"
-                  className="flex-1 min-w-0 basis-0 rounded-2xl bg-gradient-to-br from-cyber-cyan/15 to-neon-purple/15 border border-cyber-cyan/30 flex flex-col items-center justify-center gap-3 py-10 text-white hover:brightness-110 active:scale-[0.99] transition-all"
+                  className="flex-1 min-w-0 basis-0 self-stretch min-h-0 rounded-2xl bg-gradient-to-br from-cyber-cyan/15 to-neon-purple/15 border border-cyber-cyan/30 flex flex-col items-center justify-center gap-3 text-white hover:brightness-110 active:scale-[0.99] transition-all"
                 >
                   <Building2 className="w-12 h-12 text-cyber-cyan" />
                   <span className="text-base font-extrabold uppercase tracking-wide text-center px-3">{({ru:'Открыть бизнес',en:'Open business',es:'Abrir negocio',zh:'开设企业',fr:'Ouvrir un business',de:'Business eröffnen',ja:'ビジネスを開く',ko:'사업 열기',id:'Buka bisnis'}[lang] || 'Открыть бизнес')}</span>
                 </button>
+
+                {/* RIGHT: компактная кнопка МАРКЕТПЛЕЙС */}
+                <div className="flex flex-col gap-2 shrink-0 self-start pt-1">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/marketplace')}
+                    data-testid="biz-side-marketplace"
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-b from-amber-500/15 to-orange-500/10 border border-amber-400/30 flex flex-col items-center justify-center gap-0.5 text-amber-300 hover:brightness-110 active:scale-95 transition-all"
+                  >
+                    <Store className="w-5 h-5" />
+                    <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wide text-center leading-tight">{({ru:'Маркет',en:'Market',es:'Mercado',zh:'市场',fr:'Marché',de:'Markt',ja:'市場',ko:'마켓',id:'Pasar'}[lang] || 'Маркет')}</span>
+                  </button>
+                </div>
               </div>
             ) : (
               <>
@@ -1391,19 +1405,20 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
             BottomNav, поэтому виден всегда, на любой высоте экрана:
             РЕМОНТ | НАЧАТЬ СМЕНУ (8 ч) | АПГРЕЙД. У каждой карточки — свои
             данные: действия применяются к видимому бизнесу. */}
-        {!isLoading && businesses.length > 0 && (
+        {!isLoading && (
           <div
             className="shrink-0 px-4 lg:px-6 pt-1.5 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] lg:pb-4 bg-void"
             data-testid="biz-action-row-pinned"
           >
           {/* ── ФИКСИРОВАННЫЕ панели активного бизнеса (НЕ перелистываются,
-                 прикреплены к кнопкам действий с небольшим отступом) ── */}
-          {(businesses[activeBizIndex] || businesses[0]) && (() => {
-            const abiz = businesses[activeBizIndex] || businesses[0];
+                 прикреплены к кнопкам действий с небольшим отступом). Когда
+                 бизнеса ещё нет — панели показываются с заглушками (0 / —). ── */}
+          {(() => {
+            const abiz = businesses[activeBizIndex] || businesses[0] || null;
             // Authoritative economics come from the backend `production` object
             // (durability × patron × buff already applied). We do NOT recompute
             // locally anymore — that caused wrong /h and /day figures.
-            const _prod = abiz.production || {};
+            const _prod = abiz?.production || {};
             const _perDay = Number(_prod.production ?? 0);
             const _hourlyRaw = _perDay / 24;
             const _hourly = (_hourlyRaw > 0 && _hourlyRaw < 100)
@@ -1416,7 +1431,7 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
             const _consumeEntries = Object.entries(_consumeSrc)
               .filter(([, v]) => Number(v) > 0)
               .map(([r, v]) => [r, Number(v) < 100 ? Number(Number(v).toFixed(2)) : Math.round(Number(v))]);
-            const _produceResId = _prod.produces_resource || abiz.config?.produces;
+            const _produceResId = _prod.produces_resource || abiz?.config?.produces;
             const _produceIcon = _produceResId
               ? (getResource(_produceResId, lang)?.icon || resourceIcons[_produceResId] || '📦')
               : '📦';
@@ -1427,9 +1442,17 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
             const DAY_SHORT = { ru: 'сут', en: 'day', es: 'día', zh: '天', fr: 'j', de: 'Tag', ja: '日', ko: '일', id: 'hr' };
             const hourShort = HOUR_SHORT[lang] || HOUR_SHORT.ru;
             const dayShort = DAY_SHORT[lang] || DAY_SHORT.ru;
+            // Placeholder-friendly display values (empty state shows 0 / —).
+            const _idSuffix = abiz?.id || 'empty';
+            const _dur = abiz ? (abiz.durability ?? 0) : 0;
+            const _hasStorage = !!(abiz && abiz.storage_info && abiz.storage_info.capacity > 0);
+            const _storageText = _hasStorage ? `${abiz.storage_info.used}/${abiz.storage_info.capacity}` : '— / —';
+            const _incomeText = abiz ? `+${_hourly}/${hourShort}` : '0';
+            const _hasConsume = !!(abiz && _consumeEntries.length > 0);
+            const _expenseText = _hasConsume ? `−${_consumeEntries[0][1]}/${dayShort}` : '0';
             return (
               <motion.div
-                key={`panels-${abiz.id}`}
+                key={`panels-${_idSuffix}`}
                 initial={{ opacity: 0.35, scale: 0.985, y: 4 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ duration: 0.32, ease: 'easeOut' }}
@@ -1442,12 +1465,12 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                     <span className="text-white/80 flex items-center gap-2 font-semibold text-sm">
                       <Wrench className="w-4 h-4 text-cyber-cyan" /> {t('durabilityLabel')}:
                     </span>
-                    <span className={`font-extrabold text-base ${abiz.durability < 30 ? 'text-red-400' : 'text-white'}`} data-testid={`durability-value-${abiz.id}`}>
-                      {(abiz.durability ?? 100).toFixed(1)}%
+                    <span className={`font-extrabold text-base ${_dur < 30 ? 'text-red-400' : 'text-white'}`} data-testid={`durability-value-${_idSuffix}`}>
+                      {_dur.toFixed(1)}%
                     </span>
                   </div>
-                  <Progress value={abiz.durability ?? 100} className="h-2.5" />
-                  {abiz.durability < 30 && (
+                  <Progress value={_dur} className="h-2.5" />
+                  {abiz && _dur < 30 && (
                     <div className="flex items-center gap-1 text-red-400 text-xs mt-1.5">
                       <AlertCircle className="w-3 h-3" />
                       {t('needsRepair')}
@@ -1455,38 +1478,34 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                   )}
                 </div>
 
-                {/* Склад */}
-                {abiz.storage_info && abiz.storage_info.capacity > 0 && (
-                  <div className="rounded-2xl bg-black/40 border border-cyber-cyan/30 shadow-[0_0_18px_rgba(34,211,238,0.12)] px-4 py-2.5 flex items-center justify-center gap-2" data-testid={`storage-panel-${abiz.id}`}>
-                    <Package className="w-5 h-5 text-amber-400 shrink-0" />
-                    <span className="text-white font-extrabold text-sm uppercase tracking-wide">
-                      {t('warehouseLabel')}: {abiz.storage_info.used}/{abiz.storage_info.capacity}
-                    </span>
-                  </div>
-                )}
-                {abiz.storage_info?.is_full && (
+                {/* Склад — показывается всегда; без бизнеса пишет «— / —» */}
+                <div className="rounded-2xl bg-black/40 border border-cyber-cyan/30 shadow-[0_0_18px_rgba(34,211,238,0.12)] px-4 py-2.5 flex items-center justify-center gap-2" data-testid={`storage-panel-${_idSuffix}`}>
+                  <Package className="w-5 h-5 text-amber-400 shrink-0" />
+                  <span className="text-white font-extrabold text-sm uppercase tracking-wide">
+                    {t('warehouseLabel')}: {_storageText}
+                  </span>
+                </div>
+                {abiz?.storage_info?.is_full && (
                   <div className="text-red-400 text-xs flex items-center gap-1 justify-center">
                     <AlertCircle className="w-3 h-3" />
                     {t('warehouseFullMsg')}
                   </div>
                 )}
 
-                {/* Чипы дохода/расхода */}
+                {/* Чипы выпуска/потребления — показываются всегда; без бизнеса «0» */}
                 <div className="flex gap-2">
-                  <div className="flex-1 min-w-0 rounded-2xl bg-black/40 border border-green-400/30 shadow-[0_0_14px_rgba(74,222,128,0.12)] px-3 py-2.5 flex items-center justify-center gap-2" data-testid={`income-chip-${abiz.id}`}>
+                  <div className="flex-1 min-w-0 rounded-2xl bg-black/40 border border-green-400/30 shadow-[0_0_14px_rgba(74,222,128,0.12)] px-3 py-2.5 flex items-center justify-center gap-2" data-testid={`income-chip-${_idSuffix}`}>
                     <span className="text-lg leading-none">{_produceIcon}</span>
-                    <span className="text-green-400 font-extrabold text-base whitespace-nowrap">+{_hourly}/{hourShort}</span>
+                    <span className="text-green-400 font-extrabold text-base whitespace-nowrap">{_incomeText}</span>
                   </div>
-                  {_consumeEntries.length > 0 && (
-                    <div className="flex-1 min-w-0 rounded-2xl bg-black/40 border border-sky-400/30 shadow-[0_0_14px_rgba(56,189,248,0.12)] px-3 py-2.5 flex items-center justify-center gap-2" data-testid={`expense-chip-${abiz.id}`}>
-                      <span className="text-lg leading-none">{_consumeIcon}</span>
-                      <span className="text-sky-400 font-extrabold text-base whitespace-nowrap">−{_consumeEntries[0][1]}/{dayShort}</span>
-                    </div>
-                  )}
+                  <div className="flex-1 min-w-0 rounded-2xl bg-black/40 border border-sky-400/30 shadow-[0_0_14px_rgba(56,189,248,0.12)] px-3 py-2.5 flex items-center justify-center gap-2" data-testid={`expense-chip-${_idSuffix}`}>
+                    <span className="text-lg leading-none">{_consumeIcon}</span>
+                    <span className="text-sky-400 font-extrabold text-base whitespace-nowrap">{_expenseText}</span>
+                  </div>
                 </div>
 
                 {/* Level-0 lease countdown */}
-                {abiz.level === 0 && abiz.expires_at && (
+                {abiz && abiz.level === 0 && abiz.expires_at && (
                   <ZeroLeaseTimer expiresAt={abiz.expires_at} t={t} />
                 )}
               </motion.div>
