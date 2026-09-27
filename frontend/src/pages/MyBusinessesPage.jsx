@@ -1213,33 +1213,12 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                   className="flex-1 min-w-0 basis-0 rounded-2xl bg-gradient-to-br from-cyber-cyan/15 to-neon-purple/15 border border-cyber-cyan/30 flex flex-col items-center justify-center gap-3 py-10 text-white hover:brightness-110 active:scale-[0.99] transition-all"
                 >
                   <Building2 className="w-12 h-12 text-cyber-cyan" />
-                  <span className="text-base font-extrabold uppercase tracking-wide text-center px-3">{({ru:'Приобрести бизнес',en:'Acquire business',es:'Adquirir negocio',zh:'购买企业',fr:'Acquérir un business',de:'Business erwerben',ja:'ビジネスを取得',ko:'사업 획득',id:'Dapatkan bisnis'}[lang] || 'Приобрести бизнес')}</span>
+                  <span className="text-base font-extrabold uppercase tracking-wide text-center px-3">{({ru:'Открыть бизнес',en:'Open business',es:'Abrir negocio',zh:'开设企业',fr:'Ouvrir un business',de:'Business eröffnen',ja:'ビジネスを開く',ko:'사업 열기',id:'Buka bisnis'}[lang] || 'Открыть бизнес')}</span>
                 </button>
               </div>
             ) : (
               <>
               <div className="flex flex-col w-full flex-1 min-h-0 self-stretch">
-              {/* Название активного бизнеса — на всю ширину, строго по центру
-                  экрана (не зажато боковыми кнопками). Обновляется с лёгкой
-                  анимацией при перелистывании карусели. */}
-              {(() => {
-                const _ab = businesses[activeBizIndex] || businesses[0];
-                const _abName = _ab
-                  ? (_ab.config?.name?.[lang] || _ab.config?.name?.en || _ab.config?.name?.ru || tBusiness(_ab.business_type, lang))
-                  : '';
-                return (
-                  <motion.h3
-                    key={`title-${_ab?.id || 'none'}`}
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, ease: 'easeOut' }}
-                    className="shrink-0 w-full text-center font-extrabold text-white text-[clamp(1.05rem,5vw,1.5rem)] uppercase tracking-wide leading-tight px-3 mt-[clamp(4px,1.5vh,16px)] mb-[clamp(4px,1.2vh,10px)] break-words"
-                    data-testid="active-business-name"
-                  >
-                    {_abName}
-                  </motion.h3>
-                );
-              })()}
               <div className="flex items-stretch gap-2 sm:gap-3 w-[calc(100vw-2rem)] lg:w-full max-w-full overflow-hidden flex-1 min-h-0">
                 {/* LEFT: компактная кнопка ЗАДАНИЯ */}
                 <div className="flex flex-col gap-2 shrink-0 self-start pt-1">
@@ -1256,6 +1235,26 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
 
                 {/* CENTER: business skin carousel (swipe только скин) */}
                 <div className="flex-1 min-w-0 basis-0 min-h-0 flex flex-col self-stretch">
+                  {/* Название активного бизнеса — на верхней линии, на одном
+                      уровне с боковыми кнопками ЗАДАНИЯ/МАРКЕТ, по центру. */}
+                  {(() => {
+                    const _ab = businesses[activeBizIndex] || businesses[0];
+                    const _abName = _ab
+                      ? (_ab.config?.name?.[lang] || _ab.config?.name?.en || _ab.config?.name?.ru || tBusiness(_ab.business_type, lang))
+                      : '';
+                    return (
+                      <motion.h3
+                        key={`title-${_ab?.id || 'none'}`}
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeOut' }}
+                        className="shrink-0 w-full text-center font-extrabold text-white text-[clamp(1rem,4.6vw,1.45rem)] uppercase tracking-wide leading-tight px-2 pt-1 min-h-14 sm:min-h-16 flex items-center justify-center break-words"
+                        data-testid="active-business-name"
+                      >
+                        {_abName}
+                      </motion.h3>
+                    );
+                  })()}
                   <div className="relative flex-1 min-h-0 flex">
                   <div
                     ref={bizCarouselRef}
