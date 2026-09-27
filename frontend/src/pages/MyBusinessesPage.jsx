@@ -1219,6 +1219,27 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
             ) : (
               <>
               <div className="flex flex-col w-full flex-1 min-h-0 self-stretch">
+              {/* Название активного бизнеса — на всю ширину, строго по центру
+                  экрана (не зажато боковыми кнопками). Обновляется с лёгкой
+                  анимацией при перелистывании карусели. */}
+              {(() => {
+                const _ab = businesses[activeBizIndex] || businesses[0];
+                const _abName = _ab
+                  ? (_ab.config?.name?.[lang] || _ab.config?.name?.en || _ab.config?.name?.ru || tBusiness(_ab.business_type, lang))
+                  : '';
+                return (
+                  <motion.h3
+                    key={`title-${_ab?.id || 'none'}`}
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                    className="shrink-0 w-full text-center font-extrabold text-white text-[clamp(1.05rem,5vw,1.5rem)] uppercase tracking-wide leading-tight px-3 mt-[clamp(4px,1.5vh,16px)] mb-[clamp(4px,1.2vh,10px)] break-words"
+                    data-testid="active-business-name"
+                  >
+                    {_abName}
+                  </motion.h3>
+                );
+              })()}
               <div className="flex items-stretch gap-2 sm:gap-3 w-[calc(100vw-2rem)] lg:w-full max-w-full overflow-hidden flex-1 min-h-0">
                 {/* LEFT: компактная кнопка ЗАДАНИЯ */}
                 <div className="flex flex-col gap-2 shrink-0 self-start pt-1">
@@ -1269,13 +1290,6 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                     className="group shrink-0 w-full snap-start h-full flex flex-col items-center justify-center gap-[clamp(6px,2vh,16px)] px-2"
                     data-testid={biz.tutorial ? 'tutorial-business-card' : `business-card-${biz.id}`}
                   >
-                    {/* ── Название бизнеса — НАД скином ────────────────────── */}
-                    <div className="shrink-0 flex justify-center px-2 mt-[clamp(8px,3vh,28px)]">
-                      <h3 className="font-extrabold text-white text-[clamp(1rem,4.5vw,1.375rem)] uppercase tracking-wide leading-tight text-center break-words">
-                        {bizName}
-                      </h3>
-                    </div>
-
                     {/* ── СКИН БИЗНЕСА (клик → модалка с инфо) ─────────────── */}
                     <button
                       type="button"
@@ -1297,7 +1311,7 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                         <img
                           src={skinUrl}
                           alt={bizName}
-                          className="biz-skin-img drop-shadow-[0_10px_20px_rgba(0,0,0,0.55)] pointer-events-none"
+                          className="biz-skin-img biz-art-float drop-shadow-[0_10px_20px_rgba(0,0,0,0.55)] pointer-events-none"
                           loading="lazy"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
@@ -1306,7 +1320,7 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                           }}
                         />
                       )}
-                      <span className="leading-none pointer-events-none text-[clamp(3rem,18vh,5rem)]" style={{ display: skinUrl ? 'none' : 'block' }}>{bizIcon}</span>
+                      <span className="biz-art-float leading-none pointer-events-none text-[clamp(3rem,18vh,5rem)]" style={{ display: skinUrl ? 'none' : 'block' }}>{bizIcon}</span>
                     </button>
 
                     {/* ── Статус бизнеса ПОД скином ────────────────────────── */}
@@ -1387,28 +1401,42 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                  прикреплены к кнопкам действий с небольшим отступом) ── */}
           {(businesses[activeBizIndex] || businesses[0]) && (() => {
             const abiz = businesses[activeBizIndex] || businesses[0];
-            const _baseProd = abiz.production?.base_production || abiz.config?.base_production || 100;
-            const _dur = abiz.durability ?? 100;
-            const _durMult = _dur <= 0 ? 0 : _dur < 50 ? 0.8 : 1.0;
-            const _buffMult = abiz.production?.user_buff_multiplier || 1.0;
-            const _hourlyRaw = (_baseProd * _durMult * _buffMult) / 24;
-            const _hourly = _hourlyRaw < 100 ? Number(_hourlyRaw.toFixed(2)) : Math.round(_hourlyRaw);
-            const _consumes = abiz.production?.consumption_breakdown || abiz.config?.consumes;
-            const _consumeEntries = !_consumes ? [] : (Array.isArray(_consumes)
-              ? _consumes.map(c => [c.resource || c.type, c.amount || c.rate || 0])
-              : Object.entries(_consumes));
-            const _produceIcon = abiz.config?.produces
-              ? (getResource(abiz.config.produces, lang)?.icon || resourceIcons[abiz.config.produces] || '📦')
+            // Authoritative economics come from the backend `production` object
+            // (durability × patron × buff already applied). We do NOT recompute
+            // locally anymore — that caused wrong /h and /day figures.
+            const _prod = abiz.production || {};
+            const _perDay = Number(_prod.production ?? 0);
+            const _hourlyRaw = _perDay / 24;
+            const _hourly = (_hourlyRaw > 0 && _hourlyRaw < 100)
+              ? Number(_hourlyRaw.toFixed(2))
+              : Math.round(_hourlyRaw);
+            // Per-resource consumption PER DAY (buffed), authoritative.
+            const _consumeSrc = (_prod.consumption_breakdown && Object.keys(_prod.consumption_breakdown).length)
+              ? _prod.consumption_breakdown
+              : (_prod.consumption || {});
+            const _consumeEntries = Object.entries(_consumeSrc)
+              .filter(([, v]) => Number(v) > 0)
+              .map(([r, v]) => [r, Number(v) < 100 ? Number(Number(v).toFixed(2)) : Math.round(Number(v))]);
+            const _produceResId = _prod.produces_resource || abiz.config?.produces;
+            const _produceIcon = _produceResId
+              ? (getResource(_produceResId, lang)?.icon || resourceIcons[_produceResId] || '📦')
               : '📦';
             const _consumeIcon = _consumeEntries.length
-              ? (getResource(_consumeEntries[0][0], lang)?.icon || '📦')
+              ? (getResource(_consumeEntries[0][0], lang)?.icon || resourceIcons[_consumeEntries[0][0]] || '📦')
               : '📦';
             const HOUR_SHORT = { ru: 'ч', en: 'h', es: 'h', zh: '时', fr: 'h', de: 'Std.', ja: '時', ko: '시', id: 'j' };
             const DAY_SHORT = { ru: 'сут', en: 'day', es: 'día', zh: '天', fr: 'j', de: 'Tag', ja: '日', ko: '일', id: 'hr' };
             const hourShort = HOUR_SHORT[lang] || HOUR_SHORT.ru;
             const dayShort = DAY_SHORT[lang] || DAY_SHORT.ru;
             return (
-              <div className="w-full max-w-[29rem] mx-auto flex flex-col gap-[clamp(4px,1vh,8px)] mb-[clamp(6px,1.5vh,12px)]" data-testid="biz-fixed-panels">
+              <motion.div
+                key={`panels-${abiz.id}`}
+                initial={{ opacity: 0.35, scale: 0.985, y: 4 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.32, ease: 'easeOut' }}
+                className="w-full max-w-[29rem] mx-auto flex flex-col gap-[clamp(4px,1vh,8px)] mb-[clamp(6px,1.5vh,12px)]"
+                data-testid="biz-fixed-panels"
+              >
                 {/* Прочность */}
                 <div className="rounded-2xl bg-black/40 border border-cyber-cyan/30 shadow-[0_0_18px_rgba(34,211,238,0.12)] px-4 py-2.5">
                   <div className="flex justify-between items-center mb-1.5">
@@ -1462,7 +1490,7 @@ export default function MyBusinessesPage({ user, refreshBalance, updateBalance }
                 {abiz.level === 0 && abiz.expires_at && (
                   <ZeroLeaseTimer expiresAt={abiz.expires_at} t={t} />
                 )}
-              </div>
+              </motion.div>
             );
           })()}
           {(businesses[activeBizIndex] || businesses[0]) && (() => {

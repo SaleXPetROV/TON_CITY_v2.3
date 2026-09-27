@@ -1104,3 +1104,19 @@ input, textarea, select {
 @media (max-height: 600px) {
   .biz-skin-img { max-height: min(100%, 18vh); }
 }
+
+
+/* ── Экран «Бизнес»: лёгкое «дыхание»/парение арта ─────────────────────────
+   Плавно поднимает и чуть увеличивает картинку, чтобы экран выглядел живым.
+   Отключается для пользователей с prefers-reduced-motion. */
+@keyframes bizArtFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-3%) scale(1.02); }
+}
+.biz-art-float {
+  animation: bizArtFloat 4.5s ease-in-out infinite;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .biz-art-float { animation: none; }
+}

@@ -28,6 +28,28 @@ logger = logging.getLogger(__name__)
 
 STANDARD_GROUP = "standard"
 
+# Business-type aliases: the map config / catalogue historically use different
+# keys for the same building (e.g. cold_storage <-> cooler). A skin saved under
+# one key must still resolve when the live business carries the other key,
+# otherwise admin-added skins appear "missing" for some users. Mirrors the
+# frontend TYPE_ALIASES in lib/skins.js.
+SKIN_TYPE_ALIASES = {
+    "cold_storage": "cooler", "cooler": "cold_storage",
+    "signal_tower": "signal", "signal": "signal_tower",
+    "scrap_yard": "scrap", "scrap": "scrap_yard",
+}
+
+
+def _type_variants(business_type):
+    """Return [type] plus its known alias, for alias-tolerant skin lookups."""
+    if not business_type:
+        return []
+    variants = [business_type]
+    alias = SKIN_TYPE_ALIASES.get(business_type)
+    if alias and alias not in variants:
+        variants.append(alias)
+    return variants
+
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -234,7 +256,7 @@ def create_skins_user_router(db, get_current_user):
         owned.add(STANDARD_GROUP)
         q = {"group_key": {"$in": list(owned)}}
         if business_type:
-            q["business_type"] = business_type
+            q["business_type"] = {"$in": _type_variants(business_type)}
         skins = await db.business_skins.find(q, {"_id": 0}).to_list(2000)
         groups = {}
         for s in skins:
@@ -265,7 +287,8 @@ def create_skins_user_router(db, get_current_user):
             raise HTTPException(status_code=403, detail="Это не ваш бизнес")
         if data.group_key != STANDARD_GROUP:
             has = await db.business_skins.find_one(
-                {"group_key": data.group_key, "business_type": biz.get("business_type")})
+                {"group_key": data.group_key,
+                 "business_type": {"$in": _type_variants(biz.get("business_type"))}})
             if not has:
                 raise HTTPException(status_code=400, detail="Для этого бизнеса нет такого скина")
         await db.businesses.update_one({"id": data.business_id}, {"$set": {"skin_group": data.group_key}})
