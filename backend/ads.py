@@ -128,20 +128,47 @@ def create_ads_router(db, get_current_user, get_current_admin) -> APIRouter:
 
     @r.get("/api/ads/monetag/postback")
     async def postback(request: Request):
-        """Monetag postback URL (set in the Monetag dashboard):
+        """Monetag postback URL:
         https://<domain>/api/ads/monetag/postback?ymid={ymid}&event={event_type}&secret=<postback_secret>"""
         cfg = await get_config(db)
         q = request.query_params
+        
+        # 1. Проверка секретного ключа
         if q.get("secret") != cfg["postback_secret"]:
             raise HTTPException(status_code=403, detail="bad secret")
-        uid = (q.get("ymid") or "").split(":")[0]
-        event = (q.get("event") or q.get("event_type") or "impression").lower()
-        if not uid or not await db.users.find_one({"id": uid}, {"_id": 0, "id": 1}):
+        
+        # 2. Берем ymid прямо как user_id
+        uid = (q.get("ymid") or "").strip()
+        
+        # Логирование для терминала (чтобы сразу видеть запрос)
+        print(f"[MONETAG POSTBACK] Received ymid={uid}, event={q.get('event')}")
+
+        if not uid:
             return {"ok": False}
+
+        # 3. Ищем пользователя в базе
+        user = await db.users.find_one({"id": uid}, {"_id": 0, "id": 1})
+        if not user:
+            print(f"[MONETAG POSTBACK ERROR] User with id '{uid}' not found in DB!")
+            return {"ok": False}
+
+        # 4. Проверяем тип события
+        event = (q.get("event") or q.get("event_type") or "impression").lower()
         if event not in ("impression", "valued", "click", "complete", "reward"):
             return {"ok": False}
-        await db.ad_views.insert_one({"id": str(uuid.uuid4()), "user_id": uid, "day": _day(), "purpose": "daily",
-                                      "source": "postback", "event": event, "created_at": _now().isoformat()})
+
+        # 5. Записываем просмотр
+        await db.ad_views.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": uid,
+            "day": _day(),
+            "purpose": "daily",
+            "source": "postback",
+            "event": event,
+            "created_at": _now().isoformat()
+        })
+        
+        print(f"[MONETAG POSTBACK SUCCESS] View recorded for user '{uid}'")
         return {"ok": True}
 
     @r.get("/api/admin/ads")
