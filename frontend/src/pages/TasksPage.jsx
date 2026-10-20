@@ -242,24 +242,16 @@ export default function TasksPage({ user, refreshBalance }) {
     claimDaily();
   };
   const watchAd = async () => {
-    console.log("🟢 [БРАУЗЕР] Нажата кнопка просмотра рекламы. User ID:", user?.id);
     setAdBusy(true);
     try {
         const cfg = (await axios.get(`${API}/ads/config`)).data;
-        console.log("🟢 [БРАУЗЕР] Конфиг рекламы с бэкенда:", cfg);
-        
-        console.dg = console.log; // временная заглушка, если нужна
-        console.log("🟢 [БРАУЗЕР] Вызываем показ рекламы Monetag с ymid:", user?.id);
         
         await showRewardedAd(cfg, user?.id);
-        console.log("🟢 [БРАУЗЕР] Реклама успешно закрыта пользователем (просмотрена).");
 
         let gate;
         try { 
             gate = (await axios.post(`${API}/ads/daily/watched`, {}, authHeaders())).data; 
-            console.log("🟢 [БРАУЗЕР] Сервер подтвердил просмотр (клиентский режим):", gate);
         } catch (e) { 
-            console.error("🔴 [БРАУЗЕР] Ошибка запроса /ads/daily/watched:", e);
             if (e?.response?.data?.detail === 'ad_too_fast') { 
                 toast.error(t('ads_too_fast')); 
                 return; 
@@ -268,24 +260,19 @@ export default function TasksPage({ user, refreshBalance }) {
         }
 
         if (cfg.verify_postback) {
-            console.log("🟡 [БРАУЗЕР] Включен verify_postback, ожидаем подтверждения от сервера Monetag...");
             toast.info(t('ads_wait_confirm'));
             for (let i = 0; i < 6 && !(gate && gate.ok); i += 1) {
                 await new Promise((r) => setTimeout(r, 2500));
                 gate = (await axios.get(`${API}/tasks/daily`, authHeaders())).data.ads;
-                console.log(`🟡 [БРАУЗЕР] Попытка ${i + 1} проверки статуса задач:`, gate);
             }
         }
 
         setDaily((d) => ({ ...d, ads: gate || d.ads }));
-        console.log("🟢 [БРАУЗЕР] Обновление стейта завершено успешно.");
 
     } catch (e) {
-        console.error("🔴 [БРАУЗЕР] Ошибка в процессе просмотра рекламы:", e);
         toast.error(t('ads_failed'));
     } finally {
         setAdBusy(false);
-        console.log("🟢 [БРАУЗЕР] Кнопка разблокирована (adBusy = false).");
     }
   };
 
