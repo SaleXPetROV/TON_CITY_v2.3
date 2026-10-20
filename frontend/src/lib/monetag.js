@@ -31,6 +31,7 @@ function loadSdk({ zone_id: zone, sdk_src: src, sdk_fn: fnName }) {
 }
 
 export async function showRewardedAd(cfg, ymid) {
+  console.log("--> ПРОВЕРКА YMID перед вызовом рекламы:", ymid);
   const show = await loadSdk(cfg);
   // ymid comes back in Monetag's postback, so the server can confirm the view
   return show({ ymid: ymid || undefined });
