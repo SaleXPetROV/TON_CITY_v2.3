@@ -1,0 +1,18 @@
+[Unit]
+Description=LibreTranslate (9 языков GRAM City) — переводы для Willy GRAM и уведомлений
+After=network.target
+
+[Service]
+Type=simple
+User=libretranslate
+Group=libretranslate
+WorkingDirectory=/opt/libretranslate
+Environment=HOME=/opt/libretranslate
+Environment=ARGOS_PACKAGES_DIR=/opt/libretranslate/.local/share/argos-translate/packages
+ExecStart=/opt/libretranslate/venv/bin/libretranslate --host 127.0.0.1 --port 5000 --load-only en,ru,es,zh,fr,de,ja,ko,id --disable-files-translation --threads 2
+Restart=always
+RestartSec=10
+MemoryMax=2500M
+
+[Install]
+WantedBy=multi-user.target

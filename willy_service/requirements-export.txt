@@ -1,0 +1,6 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+txtai[pipeline]==9.*
+onnx
+onnxruntime>=1.17
+transformers>=4.40
