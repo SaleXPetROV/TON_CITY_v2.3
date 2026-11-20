@@ -1,0 +1,25 @@
+[Unit]
+Description=Willy GRAM — meaning search for the support assistant (txtai + multilingual-e5-small ONNX)
+After=network.target
+
+[Service]
+Type=simple
+User=willy
+Group=willy
+WorkingDirectory=/opt/willy/app
+Environment=WILLY_DATA=/var/lib/willy
+Environment=WILLY_MODELS=/opt/willy/models
+Environment=OMP_NUM_THREADS=1
+ExecStart=/opt/willy/venv/bin/uvicorn app:app --host 127.0.0.1 --port 8090 --workers 1
+Restart=always
+RestartSec=5
+# never slow the game: one core, 1 GB of memory
+CPUQuota=100%
+MemoryMax=1G
+Nice=5
+NoNewPrivileges=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/willy
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,56 @@
+{
+ "ru": {
+  "bizT": "У вас уже есть бизнес",
+  "bizX": "Так как у вас уже есть бизнес, шаги {a}–{b} (как занять бесплатный бизнес и запустить первую смену) для вас пропущены. Продолжим с шага {c}.",
+  "nofreeT": "Свободных бизнесов пока нет",
+  "nofreeX": "Сейчас у Города нет свободных бизнесов для аренды на 3 дня, поэтому шаги {a}–{b} (как занять бизнес и запустить первую смену) мы пропустим. Когда свободные бизнесы появятся, пройдите гид заново (Настройки → «{g}») — и вы увидите эти шаги."
+ },
+ "en": {
+  "bizT": "You already have a business",
+  "bizX": "Since you already have a business, steps {a}–{b} (taking a free business and starting the first shift) are skipped for you. We continue from step {c}.",
+  "nofreeT": "No free businesses right now",
+  "nofreeX": "The City has no free businesses to rent for 3 days right now, so we skip steps {a}–{b} (taking a business and starting the first shift). When free businesses appear, take the guide again (Settings → «{g}») and you will see these steps."
+ },
+ "es": {
+  "bizT": "Ya tienes un negocio",
+  "bizX": "Como ya tienes un negocio, los pasos {a}–{b} (tomar un negocio gratis y empezar el primer turno) se omiten para ti. Seguimos desde el paso {c}.",
+  "nofreeT": "Ahora no hay negocios libres",
+  "nofreeX": "Ahora la Ciudad no tiene negocios libres para alquilar 3 días, así que omitimos los pasos {a}–{b} (tomar un negocio y empezar el primer turno). Cuando aparezcan negocios libres, repite la guía (Ajustes → «{g}») y verás estos pasos."
+ },
+ "zh": {
+  "bizT": "您已经有企业了",
+  "bizX": "由于您已经有企业，第 {a}–{b} 步（领取免费企业并开始第一班）将为您跳过。我们从第 {c} 步继续。",
+  "nofreeT": "暂时没有空闲企业",
+  "nofreeX": "城市目前没有可免费租用 3 天的空闲企业，因此我们跳过第 {a}–{b} 步（领取企业并开始第一班）。出现空闲企业后，请重新进行向导（设置 → «{g}»），即可看到这些步骤。"
+ },
+ "fr": {
+  "bizT": "Vous avez déjà une entreprise",
+  "bizX": "Comme vous avez déjà une entreprise, les étapes {a}–{b} (prendre une entreprise gratuite et lancer le premier service) sont passées pour vous. On continue à l’étape {c}.",
+  "nofreeT": "Aucune entreprise libre pour le moment",
+  "nofreeX": "La Ville n’a pour l’instant aucune entreprise libre à louer pour 3 jours, nous passons donc les étapes {a}–{b} (prendre une entreprise et lancer le premier service). Quand des entreprises libres apparaîtront, refaites le guide (Paramètres → «{g}») pour voir ces étapes."
+ },
+ "de": {
+  "bizT": "Du hast schon ein Unternehmen",
+  "bizX": "Da du schon ein Unternehmen hast, werden die Schritte {a}–{b} (ein kostenloses Unternehmen übernehmen und die erste Schicht starten) für dich übersprungen. Weiter geht es mit Schritt {c}.",
+  "nofreeT": "Gerade keine freien Unternehmen",
+  "nofreeX": "Die Stadt hat gerade keine freien Unternehmen zur Miete für 3 Tage, deshalb überspringen wir die Schritte {a}–{b} (ein Unternehmen übernehmen und die erste Schicht starten). Sobald freie Unternehmen da sind, starte den Guide neu (Einstellungen → «{g}») und du siehst diese Schritte."
+ },
+ "ja": {
+  "bizT": "すでにビジネスをお持ちです",
+  "bizX": "すでにビジネスをお持ちなので、ステップ {a}–{b}（無料ビジネスの取得と最初のシフト開始）はスキップします。ステップ {c} から続けます。",
+  "nofreeT": "空いているビジネスが今ありません",
+  "nofreeX": "現在、市には3日間無料で借りられる空きビジネスがないため、ステップ {a}–{b}（ビジネスの取得と最初のシフト開始）をスキップします。空きビジネスが出たらガイドをやり直す（設定 →「{g}」）と、これらのステップを見られます。"
+ },
+ "ko": {
+  "bizT": "이미 사업체가 있습니다",
+  "bizX": "이미 사업체가 있으므로 {a}–{b}단계(무료 사업체 받기와 첫 교대 시작)는 건너뜁니다. {c}단계부터 이어갑니다.",
+  "nofreeT": "지금은 빈 사업체가 없습니다",
+  "nofreeX": "지금 도시에 3일 무료로 빌릴 수 있는 빈 사업체가 없어 {a}–{b}단계(사업체 받기와 첫 교대 시작)를 건너뜁니다. 빈 사업체가 생기면 가이드를 다시 진행하세요(설정 → «{g}»). 이 단계들을 볼 수 있습니다."
+ },
+ "id": {
+  "bizT": "Kamu sudah punya bisnis",
+  "bizX": "Karena kamu sudah punya bisnis, langkah {a}–{b} (mengambil bisnis gratis dan memulai shift pertama) dilewati untukmu. Kita lanjut dari langkah {c}.",
+  "nofreeT": "Belum ada bisnis kosong",
+  "nofreeX": "Saat ini Kota tidak punya bisnis kosong untuk disewa 3 hari, jadi kita lewati langkah {a}–{b} (mengambil bisnis dan memulai shift pertama). Saat bisnis kosong muncul, ulangi panduan (Pengaturan → «{g}») dan kamu akan melihat langkah-langkah ini."
+ }
+}

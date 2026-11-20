@@ -1,0 +1,6 @@
+txtai==9.*
+onnxruntime>=1.17
+faiss-cpu>=1.8
+fastapi>=0.110
+uvicorn>=0.29
+transformers>=4.40
