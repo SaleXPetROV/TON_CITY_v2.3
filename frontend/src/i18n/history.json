@@ -1,0 +1,110 @@
+{
+ "ru": {
+  "trade": "Торговля",
+  "contracts": "Контракты и доставка",
+  "business": "Бизнесы",
+  "land": "Земля",
+  "wallet": "Пополнение и вывод",
+  "rewards": "Награды и бонусы",
+  "passes": "Пропуска",
+  "alliance": "Альянс",
+  "credit": "Кредиты",
+  "other": "Другое"
+ },
+ "en": {
+  "trade": "Trading",
+  "contracts": "Contracts and delivery",
+  "business": "Businesses",
+  "land": "Land",
+  "wallet": "Deposits and withdrawals",
+  "rewards": "Rewards and bonuses",
+  "passes": "Passes",
+  "alliance": "Alliance",
+  "credit": "Credits",
+  "other": "Other"
+ },
+ "es": {
+  "trade": "Comercio",
+  "contracts": "Contratos y entregas",
+  "business": "Negocios",
+  "land": "Terrenos",
+  "wallet": "Depósitos y retiros",
+  "rewards": "Premios y bonos",
+  "passes": "Pases",
+  "alliance": "Alianza",
+  "credit": "Créditos",
+  "other": "Otros"
+ },
+ "zh": {
+  "trade": "交易",
+  "contracts": "合同与配送",
+  "business": "企业",
+  "land": "土地",
+  "wallet": "充值与提现",
+  "rewards": "奖励与福利",
+  "passes": "通行证",
+  "alliance": "联盟",
+  "credit": "贷款",
+  "other": "其他"
+ },
+ "fr": {
+  "trade": "Commerce",
+  "contracts": "Contrats et livraisons",
+  "business": "Entreprises",
+  "land": "Terrains",
+  "wallet": "Dépôts et retraits",
+  "rewards": "Récompenses et bonus",
+  "passes": "Passes",
+  "alliance": "Alliance",
+  "credit": "Crédits",
+  "other": "Autres"
+ },
+ "de": {
+  "trade": "Handel",
+  "contracts": "Verträge und Lieferungen",
+  "business": "Geschäfte",
+  "land": "Grundstücke",
+  "wallet": "Einzahlungen und Auszahlungen",
+  "rewards": "Belohnungen und Boni",
+  "passes": "Pässe",
+  "alliance": "Allianz",
+  "credit": "Kredite",
+  "other": "Sonstiges"
+ },
+ "ja": {
+  "trade": "取引",
+  "contracts": "契約と配送",
+  "business": "ビジネス",
+  "land": "土地",
+  "wallet": "入金と出金",
+  "rewards": "報酬とボーナス",
+  "passes": "パス",
+  "alliance": "同盟",
+  "credit": "ローン",
+  "other": "その他"
+ },
+ "ko": {
+  "trade": "거래",
+  "contracts": "계약과 배송",
+  "business": "비즈니스",
+  "land": "토지",
+  "wallet": "입금과 출금",
+  "rewards": "보상과 보너스",
+  "passes": "패스",
+  "alliance": "동맹",
+  "credit": "대출",
+  "other": "기타"
+ },
+ "id": {
+  "trade": "Perdagangan",
+  "contracts": "Kontrak dan pengiriman",
+  "business": "Bisnis",
+  "land": "Lahan",
+  "wallet": "Setoran dan penarikan",
+  "rewards": "Hadiah dan bonus",
+  "passes": "Pass",
+  "alliance": "Aliansi",
+  "credit": "Kredit",
+  "other": "Lainnya"
+ }
+}

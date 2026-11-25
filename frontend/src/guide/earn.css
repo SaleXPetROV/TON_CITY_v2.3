@@ -1,0 +1,106 @@
+/* «Как заработать» — the 9-step window (EarnIntro.jsx). The game's own look: Unbounded titles, Rajdhani text,
+   cyan = action, green = money, yellow = bonus; each step's picture stands on its own coloured glow. */
+.ei-root{position:fixed;inset:0;z-index:2147483100;display:flex;align-items:flex-end;justify-content:center;font-family:'Rajdhani',sans-serif;color:#EDEDED}
+@media (min-width:640px){.ei-root{align-items:center}}
+.ei-bg{position:absolute;inset:0;background:rgba(2,4,10,.82);backdrop-filter:blur(3px)}
+.ei-card{position:relative;width:100%;max-width:440px;max-height:calc(100dvh - env(safe-area-inset-top,0px) - 8px);display:flex;flex-direction:column;
+  background:linear-gradient(180deg,#0d1220 0%,#070a12 100%);border:1px solid rgba(0,240,255,.28);border-bottom:0;border-radius:22px 22px 0 0;
+  box-shadow:0 -10px 50px rgba(0,0,0,.6),0 0 40px rgba(0,240,255,.10);overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (min-width:640px){.ei-card{border-radius:22px;border-bottom:1px solid rgba(0,240,255,.28)}}
+.ei-top{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 4px 18px;font-size:13px;font-weight:700;letter-spacing:.02em;color:#8fa3b8}
+.ei-top button{width:32px;height:32px;border-radius:10px;color:#cfd8e3;font-size:16px;background:rgba(255,255,255,.06)}
+.ei-top button:focus-visible,.ei-btn:focus-visible,.ei-cta:focus-visible,.ei-dots button:focus-visible{outline:2px solid #00F0FF;outline-offset:2px}
+
+/* the picture */
+.ei-stage{position:relative;height:214px;margin:6px 14px 0;border-radius:18px;display:flex;align-items:center;justify-content:center;overflow:hidden;
+  background:radial-gradient(120% 90% at 50% 100%,var(--glow,rgba(0,240,255,.22)) 0%,rgba(0,0,0,0) 62%),linear-gradient(180deg,#0a1020,#080b14);
+  border:1px solid rgba(255,255,255,.06);animation:ei-in .35s ease-out}
+.ei-stage.s1{--glow:rgba(0,240,255,.24)}.ei-stage.s2{--glow:rgba(0,255,148,.22)}.ei-stage.s3{--glow:rgba(0,240,255,.22)}
+.ei-stage.s4{--glow:rgba(120,140,255,.24)}.ei-stage.s5{--glow:rgba(255,80,110,.16)}.ei-stage.s6{--glow:rgba(160,90,255,.24)}
+.ei-stage.s7{--glow:rgba(0,255,148,.20)}.ei-stage.s8{--glow:rgba(255,214,0,.20)}.ei-stage.s9{--glow:rgba(255,190,60,.22)}
+.ei-num{position:absolute;left:12px;top:4px;font:800 64px/1 'Unbounded',sans-serif;color:rgba(255,255,255,.05);pointer-events:none}
+@keyframes ei-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.ei-stage,.ei-body{animation:none!important}.ei-truck,.ei-ring .fg{animation:none!important}}
+
+.ei-b{height:150px;width:auto;filter:drop-shadow(0 10px 18px rgba(0,0,0,.6))}
+.ei-b.big{height:176px}.ei-b.sm{height:96px}.ei-b.wide{height:160px}.ei-b.dim{opacity:.55;filter:grayscale(.5) drop-shadow(0 8px 14px rgba(0,0,0,.6))}
+.ei-arrow{font:700 22px/1 'Unbounded',sans-serif;color:#00F0FF;text-shadow:0 0 10px rgba(0,240,255,.7);margin:0 2px}
+.ei-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-weight:700;font-size:13px;white-space:nowrap;background:rgba(6,10,18,.88)}
+.ei-chip.cyan{border:1px solid rgba(0,240,255,.55);color:#7ff6ff}
+.ei-chip.green{border:1px solid rgba(0,255,148,.55);color:#00FF94}
+.ei-chip.yellow{border:1px solid rgba(255,214,0,.55);color:#FFD600}
+.ei-chips{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
+.ei-chips.col{flex-direction:column;align-items:flex-end;right:14px;left:auto;bottom:14px}
+
+/* 1 — the loop */
+.ei-loop{display:flex;align-items:center;gap:6px}.ei-loop .ei-b{height:120px}
+.ei-r{width:64px;height:64px;filter:drop-shadow(0 0 12px rgba(0,255,148,.35))}
+.ei-coin{width:62px;height:62px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font:800 30px/1 'Unbounded',sans-serif;color:#1a1400;
+  background:radial-gradient(circle at 35% 30%,#fff3a8,#FFD600 45%,#c79a00);box-shadow:0 0 22px rgba(255,214,0,.55),inset 0 -4px 0 rgba(0,0,0,.18)}
+/* 2 — a free plot */
+.ei-plot{position:relative;display:flex;align-items:flex-end;justify-content:center;height:100%;width:100%}
+.ei-tile{position:absolute;bottom:22px;left:50%;width:210px;height:105px;transform:translateX(-50%) rotate(0deg);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
+  background:linear-gradient(135deg,rgba(0,255,148,.35),rgba(0,240,255,.12));box-shadow:0 0 30px rgba(0,255,148,.4)}
+.ei-plot .ei-b{position:relative;margin-bottom:26px}
+.ei-plot .ei-chip{position:absolute;top:14px;right:14px}
+/* 3 — the shift ring */
+.ei-shift{position:relative;display:flex;align-items:center;justify-content:center}
+.ei-ring{position:absolute;width:190px;height:190px}
+.ei-ring circle{fill:none;stroke-width:5}.ei-ring .bg{stroke:rgba(255,255,255,.08)}
+.ei-ring .fg{stroke:#00F0FF;stroke-linecap:round;stroke-dasharray:339;stroke-dashoffset:110;transform:rotate(-90deg);transform-origin:60px 60px;
+  filter:drop-shadow(0 0 6px rgba(0,240,255,.8));animation:ei-tick 6s linear infinite}
+@keyframes ei-tick{from{stroke-dashoffset:339}to{stroke-dashoffset:0}}
+.ei-shift .ei-b{height:140px;position:relative}
+.ei-shift .ei-chip{position:absolute;bottom:-34px}
+/* 4 — the warehouse */
+.ei-store{display:flex;flex-direction:column;align-items:center;gap:12px}
+.ei-grid{display:grid;grid-template-columns:repeat(3,58px);gap:8px}
+.ei-cell{width:58px;height:58px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center}
+.ei-cell img{width:40px;height:40px}
+.ei-cap{position:relative;width:190px;height:18px;border-radius:9px;background:rgba(255,255,255,.07);overflow:hidden}
+.ei-cap i{position:absolute;left:0;top:0;bottom:0;width:72%;background:linear-gradient(90deg,#00F0FF,#7c8cff)}
+.ei-cap span{position:relative;display:block;text-align:center;font-size:12px;font-weight:700;line-height:18px;color:#fff}
+/* 5 — the order book */
+.ei-book{width:220px;font:600 14px/1 'JetBrains Mono',monospace}
+.ei-book .row{position:relative;display:flex;justify-content:space-between;align-items:center;height:22px;padding:0 6px;margin:2px 0;border-radius:4px}
+.ei-book .row i{position:absolute;right:0;top:0;bottom:0;border-radius:4px}
+.ei-book .ask i{background:rgba(255,80,110,.16)}.ei-book .ask b{color:#ff6b86}
+.ei-book .bid i{background:rgba(0,255,148,.14)}.ei-book .bid b{color:#00FF94}
+.ei-book b,.ei-book span{position:relative}.ei-book span{color:#dfe6ef}
+.ei-book .row.city{outline:1px solid rgba(0,255,148,.6);box-shadow:0 0 14px rgba(0,255,148,.25)}
+.ei-book .row em{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:700 11px/1 'Rajdhani',sans-serif;font-style:normal;color:#00FF94;white-space:nowrap;background:rgba(0,30,20,.85);padding:2px 6px;border-radius:999px}
+.ei-book .mid{font:800 20px/1 'Unbounded',sans-serif;color:#fff;padding:6px 6px}
+
+/* 6 — a contract delivery */
+.ei-route{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:space-between;padding:0 10px}
+.ei-dash{position:absolute;left:18%;right:18%;top:38%;width:64%;height:40px}
+.ei-dash path{fill:none;stroke:#b48cff;stroke-width:2.5;stroke-dasharray:6 6;filter:drop-shadow(0 0 4px rgba(180,140,255,.8))}
+.ei-truck{position:absolute;left:50%;top:30%;width:96px;transform:translateX(-50%);filter:drop-shadow(0 6px 10px rgba(0,0,0,.6));animation:ei-drive 3.2s ease-in-out infinite alternate}
+@keyframes ei-drive{from{transform:translate(-90%,6px)}to{transform:translate(-10%,-4px)}}
+.ei-route .ei-b.sm{height:104px;position:relative;margin-top:60px}
+/* 7 — the upgrade */
+.ei-up{position:relative;display:flex;align-items:center;gap:6px;width:100%;height:100%;justify-content:center;padding-bottom:30px}
+.ei-up .ei-b{height:132px}
+/* 8 — free rewards */
+.ei-free{display:grid;grid-template-columns:repeat(2,128px);gap:10px}
+.ei-gift{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,214,0,.25);font-weight:700;font-size:15px;color:#fff3c4}
+.ei-gift b{font-size:22px}.ei-gift img{width:28px;height:28px}
+.ei-gift.gold{border-color:rgba(255,214,0,.7);box-shadow:0 0 16px rgba(255,214,0,.25)}
+/* 9 — the bank */
+.ei-bank{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:flex-start;padding-left:6px}
+
+/* the text */
+.ei-body{padding:14px 20px 4px;animation:ei-in .35s ease-out}
+.ei-step{font-size:13px;font-weight:700;color:#00F0FF;letter-spacing:.02em}
+.ei-title{font:700 20px/1.2 'Unbounded',sans-serif;margin:4px 0 8px;color:#fff}
+.ei-text{font-size:16.5px;line-height:1.38;color:#cdd6e3;margin:0;max-width:60ch}
+.ei-cta{margin-top:12px;padding:8px 14px;border-radius:12px;border:1px solid rgba(0,240,255,.45);color:#7ff6ff;font-weight:700;font-size:15px;background:rgba(0,240,255,.08)}
+.ei-foot{padding:14px 20px 16px;display:flex;flex-direction:column;gap:12px}
+.ei-dots{display:flex;justify-content:center;gap:7px}
+.ei-dots button{width:8px;height:8px;border-radius:4px;background:rgba(255,255,255,.18);transition:width .25s,background .25s;padding:0}
+.ei-dots button.done{background:rgba(0,240,255,.45)}
+.ei-dots button.on{width:22px;background:#00F0FF;box-shadow:0 0 8px rgba(0,240,255,.8)}
+.ei-btns{display:grid;grid-template-columns:1fr 1.6fr;gap:10px}
+.ei-btn{height:48px;border-radius:14px;font:700 16px/1 'Unbounded',sans-serif;background:#00F0FF;color:#02161a;box-shadow:0 0 18px rgba(0,240,255,.45)}
+.ei-btn.ghost{background:rgba(255,255,255,.06);color:#cfd8e3;box-shadow:none;font-family:'Rajdhani',sans-serif;font-size:16px}
+@media (max-height:700px){.ei-stage{height:170px}.ei-b{height:120px}.ei-b.big{height:140px}.ei-text{font-size:15.5px}}
